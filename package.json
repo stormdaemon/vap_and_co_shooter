@@ -1,0 +1,23 @@
+{
+  "name": "vap_and_co_shooter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stormdaemon/vap_and_co_shooter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stormdaemon/vap_and_co_shooter/issues"
+  },
+  "homepage": "https://github.com/stormdaemon/vap_and_co_shooter#readme",
+  "dependencies": {
+    "three": "^0.186.0"
+  }
+}
