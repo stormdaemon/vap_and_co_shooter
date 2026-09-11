@@ -1,6 +1,8 @@
 // Procedural PBR texture generation + photo texture loading.
 // Everything is produced on canvases at load time so the game stays fully static.
 import * as THREE from 'three';
+import { cacheGet, cachePut, canvasToBlob } from './texcache.js';
+const TEX_VERSION = 'v3';
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
@@ -34,8 +36,10 @@ function makeNoise(seed = 1) {
 
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 
+let ANISO_CAP = 8;
 function tex(c, { srgb = true, repeat = [1, 1], aniso = 8, wrap = true } = {}) {
-  const t = new THREE.CanvasTexture(c);
+  aniso = Math.min(aniso, ANISO_CAP);
+  const t = new THREE.CanvasTexture(c); t.userData.opts = { srgb, repeat, aniso, wrap };
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   if (wrap) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
   t.repeat.set(repeat[0], repeat[1]);
@@ -44,6 +48,10 @@ function tex(c, { srgb = true, repeat = [1, 1], aniso = 8, wrap = true } = {}) {
   return t;
 }
 
+function texFromBitmap(bmp, { srgb = true, repeat = [1, 1], aniso = 8, wrap = true } = {}) {
+  const t = new THREE.Texture(bmp); t.flipY = false; t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  if (wrap) { t.wrapS = t.wrapT = THREE.RepeatWrapping; } t.repeat.set(repeat[0], repeat[1]); t.anisotropy = Math.min(aniso, ANISO_CAP); t.needsUpdate = true; t.userData.opts = { srgb, repeat, aniso, wrap }; return t;
+}
 // height field (Float32 0..1) -> normal map canvas
 function normalFromHeight(h, w, hh, strength = 2) {
   const c = canvas(w, hh), ctx = c.getContext('2d'), img = ctx.createImageData(w, hh), d = img.data;
@@ -331,13 +339,14 @@ export function loadPhoto(url, { srgb = true, repeat = [1, 1], wrap = false, ani
     new THREE.TextureLoader().load(url, t => {
       t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(repeat[0], repeat[1]); t.anisotropy = aniso; res(t);
+      t.repeat.set(repeat[0], repeat[1]); t.anisotropy = Math.min(aniso, ANISO_CAP); res(t);
     }, undefined, rej);
   });
 }
 
 export async function buildTextureLibrary(quality, onProgress) {
   const hi = quality === 'high', lo = quality === 'low';
+  ANISO_CAP = lo ? 2 : hi ? 8 : 4;
   const S = lo ? 512 : hi ? 2048 : 1024;
   const lib = {};
   const steps = [
@@ -371,7 +380,28 @@ export async function buildTextureLibrary(quality, onProgress) {
   for (let i = 0; i < steps.length; i++) {
     onProgress?.(steps[i][0], i / steps.length);
     await new Promise(r => setTimeout(r, 0));
+    const before = new Set(Object.keys(lib));
+    const cacheKey = `${TEX_VERSION}:${quality}:${i}`;
+    const cached = i < steps.length - 1 ? await cacheGet(cacheKey) : null; // last step = photos (browser-cached already)
+    if (cached && cached.entries) {
+      try {
+        for (const e of cached.entries) {
+          const bmp = await createImageBitmap(e.blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none' });
+          const t = texFromBitmap(bmp, e.opts);
+          if (e.sub) { lib[e.key] = lib[e.key] || {}; lib[e.key][e.sub] = t; } else lib[e.key] = t;
+        }
+        continue;
+      } catch { /* fall through and regenerate */ }
+    }
     await steps[i][1]();
+    if (i < steps.length - 1) {
+      // persist this step's canvases (async, best effort)
+      const entries = [];
+      for (const k of Object.keys(lib)) { if (before.has(k)) continue; const v = lib[k];
+        const items = v.isTexture ? [[null, v]] : Object.entries(v);
+        for (const [sub, t] of items) { if (!t?.image?.getContext) continue; const blob = await canvasToBlob(t.image, !t.userData.opts?.srgb); if (blob) entries.push({ key: k, sub, opts: t.userData.opts, blob }); } }
+      cachePut(cacheKey, { entries });
+    }
   }
   onProgress?.('Textures prêtes', 1);
   return lib;

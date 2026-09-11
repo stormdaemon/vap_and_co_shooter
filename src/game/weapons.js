@@ -37,7 +37,7 @@ export class Weapons {
     const vl = new THREE.PointLight(0xfff2e0, 0.4, 1.6, 1.5); vl.position.set(0.15, 0.3, -0.05); this.vm.add(vl);
     this.models = {}; this.buildModels();
     this.projGeo = { gummy: new THREE.SphereGeometry(0.06, 8, 6), bubble: new THREE.SphereGeometry(0.32, 18, 12), grenade: new THREE.SphereGeometry(0.09, 10, 8) };
-    this.projMat = { gummy: new THREE.MeshStandardMaterial({ color: 0xff4fa3, roughness: 0.3, emissive: 0xff2a7f, emissiveIntensity: 0.5 }), bubble: new THREE.MeshPhysicalMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, roughness: 0.03, metalness: 0, envMapIntensity: 2, depthWrite: false }), grenade: VM_MATS.pink };
+    this.projMat = { gummy: new THREE.MeshStandardMaterial({ color: 0xff4fa3, roughness: 0.3, emissive: 0xff2a7f, emissiveIntensity: 0.5 }), bubble: new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, roughness: 0.03, metalness: 0, envMapIntensity: 2, depthWrite: false }), grenade: VM_MATS.pink };
     this.setCurrent('fists', true);
   }
   buildModels() {
@@ -160,7 +160,7 @@ export class Weapons {
     if (D.key === 'gummy') { mesh = new THREE.Mesh(this.projGeo.gummy, this.projMat.gummy.clone()); mesh.material.color.setHSL(Math.random(), 0.8, 0.6); mesh.material.emissive.copy(mesh.material.color); }
     else if (D.key === 'flamant') { mesh = this.world.makeFlamingo(0.22); }
     else if (D.key === 'bulles') { mesh = new THREE.Mesh(this.projGeo.bubble, this.projMat.bubble); }
-    else if (D.key === 'grenade') { mesh = new THREE.Group(); const b = new THREE.Mesh(this.projGeo.grenade, this.projMat.grenade); mesh.add(b); const l = new THREE.PointLight(0xff4fa3, 1.2, 3, 2); mesh.add(l); mesh.userData.light = l; }
+    else if (D.key === 'grenade') { mesh = new THREE.Mesh(this.projGeo.grenade, this.projMat.grenade); }
     else { mesh = new THREE.Mesh(new THREE.SphereGeometry(pd.radius, 10, 8), new THREE.MeshStandardMaterial({ color: 0xe8f4ff, emissive: 0xbfe6ff, emissiveIntensity: 0.8, transparent: true, opacity: 0.8 })); }
     mesh.position.copy(p); this.g.R.scene.add(mesh);
     this.projectiles.push({ mesh, pos: p.clone(), vel: d.clone().multiplyScalar(pd.speed), def: D, pd, life: pd.life || 4, bounces: pd.bounces || 0, owner, spin: new THREE.Vector3(Math.random() * 6, Math.random() * 6, Math.random() * 6), t: 0 });
@@ -206,7 +206,7 @@ export class Weapons {
       if (p.pos.y > 6.4) { p.pos.y = 6.4; p.vel.y = -Math.abs(p.vel.y) * 0.3; }
       p.mesh.position.copy(p.pos); p.mesh.rotation.x += p.spin.x * dt; p.mesh.rotation.y += p.spin.y * dt;
       if (p.def.key === 'flamant') { p.mesh.rotation.set(0, 0, 0); p.mesh.lookAt(p.pos.clone().add(p.vel)); p.mesh.rotateY(Math.PI); this.fx.puff(p.pos, { size: 0.25, life: 0.5, opacity: 0.35, color: 0xffc0e0, grow: 2 }); this.fx.particle(p.pos.x, p.pos.y, p.pos.z, (Math.random() - 0.5), Math.random(), (Math.random() - 0.5), { life: 0.5, size: 0.06, color: [1, 0.4, 0.7] }); }
-      if (p.pd.fuse && p.mesh.userData.light) { p.mesh.userData.light.intensity = Math.sin(p.t * (10 + (1.7 - p.life) * 30)) > 0 ? 2 : 0.2; }
+      if (p.pd.fuse) { const on = Math.sin(p.t * (10 + (1.7 - p.life) * 30)) > 0; p.mesh.material = on ? VM_MATS.white : VM_MATS.pink; if (on && Math.random() < 0.3) this.fx.light(p.pos, 0xff4fa3, 1.2, 0.1, 3); }
       if (p.pd.bubble) { p.mesh.scale.setScalar(1 + Math.sin(p.t * 6) * 0.06); }
       if (dead) { this.g.R.scene.remove(p.mesh); this.projectiles.splice(i, 1); }
     }
@@ -234,7 +234,6 @@ export class Weapons {
     const D = WEAPONS[key]; let m;
     if (key === 'grenade') { m = new THREE.Group(); for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(this.projGeo.grenade, VM_MATS.pink); b.position.set((i - 1) * 0.16, 0, 0); m.add(b); } }
     else { m = this.models[key].clone(); m.visible = true; m.traverse(o => { if (o.isMesh) o.renderOrder = 0; }); m.scale.setScalar(key === 'flamingo' ? 1.6 : 1.3); m.userData = {}; }
-    const glow = new THREE.PointLight(D.color || 0xff4fa3, 0.6, 2.2, 2); glow.position.set(0, 0.6, 0); m.add(glow);
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.42, 32), new THREE.MeshBasicMaterial({ color: D.color || 0xff4fa3, transparent: true, opacity: 0.6, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -0.15;
     const g = new THREE.Group(); g.add(m); g.add(ring); const fy = this.world.floorHeight(pos.x, pos.z); g.position.set(pos.x, fy + 0.5, pos.z); this.g.R.scene.add(g);
     const d = { key, g, m, ring, t: Math.random() * 6, ammoMul, label: label || (key === 'flamingo' ? 'LE FLAMANT ROSE' : D.name), pos: g.position, kind: 'weapon' };
@@ -245,7 +244,7 @@ export class Weapons {
     const [name, color] = PU[type]; const g = new THREE.Group();
     const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16, 1), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.2, roughness: 0.2 })); g.add(core);
     const shell = new THREE.Mesh(new THREE.IcosahedronGeometry(0.24, 0), new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.5 })); g.add(shell);
-    const glow = new THREE.PointLight(color, 0.6, 2.2, 2); glow.position.set(0, 0.5, 0); g.add(glow); const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.36, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -0.35; g.add(ring);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.36, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = -0.35; g.add(ring);
     const fy = this.world.floorHeight(pos.x, pos.z); g.position.set(pos.x, fy + 0.6, pos.z); this.g.R.scene.add(g);
     const d = { key: type, g, m: core, ring, t: Math.random() * 6, label: name, pos: g.position, kind: 'powerup', shell, life: 25 }; this.drops.push(d); return d;
   }

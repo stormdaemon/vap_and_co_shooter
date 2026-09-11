@@ -11,6 +11,7 @@ import { Game } from './game/game.js';
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
 
+window.__bootStart = performance.now();
 async function boot() {
   const canvas = $('#view');
   const quality = params.get('q') || localStorage.getItem('vc_quality') || 'med';
@@ -23,14 +24,16 @@ async function boot() {
   setProgress('Construction du magasin…', 0.7); await tick();
   const world = new World(R.scene, lib, quality);
   setProgress('Mise en rayon des e-liquides…', 0.82); await tick();
-  const bottles = new Bottles(R.scene, world);
+  const bottles = new Bottles(R.scene, world, quality);
   const input = new Input(canvas);
   const player = new Player(world, R.camera, input);
   setProgress('Réveil des zinzins…', 0.9); await tick();
   const game = new Game({ R, world, bottles, input, player, lib, quality });
   await game.init();
+  setProgress('Compilation des shaders…', 0.94); await tick();
+  game.warmup(); // compiles every shader variant up front (hidden reference objects stay alive so programs are never released)
   // warm-up: compile shaders by rendering one frame
-  R.camera.position.set(6.95, 4.6, 10.5); R.camera.lookAt(-0.5, 1.5, -3); R.render(0);
+  R.camera.position.set(6.95, 4.6, 10.5); R.camera.lookAt(-0.5, 1.5, -3); R.render(0.04);
   setProgress('Prêt.', 1);
   $('#loader').classList.add('hidden'); $('#menuActions').classList.remove('hidden');
   window.__game = game; // for tests

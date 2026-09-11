@@ -94,6 +94,23 @@ export class Game {
     setTimeout(() => { this.ui.overlay(record ? 'record' : 'over'); this.input.unlock(); }, 1400);
   }
   toggleFlash() { this.flashOn = !this.flashOn; this.audio.play('beep'); this.ui.toast(this.flashOn ? 'Lampe torche allumée' : 'Lampe torche éteinte', 1.5); }
+  // Compile every shader variant the game can hit (pooled FX, projectiles, drops, skinned depth) before play starts.
+  warmup() {
+    const R = this.R, fx = this.fx, W = this.weapons; const scene = R.scene;
+    // two hidden reference zinzins: one opaque, one transparent (death fade) so both skinned shader variants stay resident
+    const dummy = this.enemies.spawn('client', 0, 6); dummy.trap(0.01); const dummy2 = this.enemies.spawn('mamie', 1, 6); dummy2.mat.transparent = true; dummy2.mat.opacity = 0.5; this.enemies.list.length = 0; this.dummies = [dummy, dummy2];
+    const pools = [...fx.puffPool, ...fx.tracerPool, ...fx.decalPool, ...fx.ringPool]; for (const o of pools) o.visible = true; fx.points.visible = true; fx.debris.visible = true;
+    for (const k in W.models) W.models[k].visible = true; W.grenadeVm.visible = true;
+    const o = new THREE.Vector3(0, 1.5, 6), d = new THREE.Vector3(0, 0, -1);
+    for (const k of ['gummy', 'bulles', 'grenade', 'flamant']) W.spawnProjectile(o, d, WEAPONS[k], 'player');
+    const drops = [W.drop('vapo', new THREE.Vector3(1, 0, 6)), W.dropPowerup('heal', new THREE.Vector3(-1, 0, 6))];
+    R.camera.position.set(0, 1.7, 9); R.camera.lookAt(0, 1, 0); R.camera.updateMatrixWorld(true);
+    R.precompile(); R.render(0); R.render(0.02);
+    for (const o of pools) o.visible = false; for (const k in W.models) W.models[k].visible = false; W.grenadeVm.visible = false;
+    for (const p of W.projectiles) scene.remove(p.mesh); W.projectiles.length = 0; for (const dr of drops) scene.remove(dr.g); W.drops.length = 0;
+    for (const d of this.dummies) { d.mesh.visible = false; d.alive = false; d.hp = 0; } fx.reset();
+    W.setCurrent('fists', true);
+  }
   debugCamera(x, y, z, yaw, pitch) { this.debugCam = { x, y, z, yaw, pitch }; }
   get boss() { return this.enemies.list.find(e => e.alive && e.T.boss) || null; }
   get scoreMul() { return (this.waveMod?.scoreMul || 1); }

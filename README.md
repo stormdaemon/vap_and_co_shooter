@@ -57,4 +57,17 @@ assets/               photos de référence et crops extraits de l'atlas d'origi
 legacy/               ancienne version (fichiers HTML autonomes)
 ```
 
+## Performances (PC modestes)
+
+- Rendu interne plafonné à 1× (Éco 0,9×, Photoréaliste 1,5×) avec résolution dynamique 0,5–1× qui vise ~55 fps.
+- Chaîne de post-traitement réduite : tone mapping et sRGB fusionnés dans la passe de grade, FXAA en une passe (SMAA
+  seulement en Photoréaliste), cibles 8 bits en Éco.
+- Nombre de lumières constant (aucune recompilation de shader en jeu) ; tous les shaders sont compilés au chargement
+  via une routine de chauffe (zinzins de référence cachés, projectiles, effets, bonus).
+- Ombres : soleil uniquement en Éco/Équilibrée (1024/1536 px), mises à jour un frame sur deux ou trois ; spots
+  ombrés seulement en Photoréaliste ; les flacons ne projettent d'ombre qu'en Photoréaliste.
+- Un seul draw call par zinzin (SkinnedMesh + atlas), viewmodels fusionnés par matériau, verre en MeshStandard.
+- Textures procédurales mises en cache dans IndexedDB : le premier chargement les génère, les suivants sont instantanés.
+- HUD sans `backdrop-filter` (le flou CSS au-dessus d'un canvas WebGL coûte cher sur GPU intégré).
+
 Paramètres d'URL utiles : `?q=low|med|high` force la qualité, `?auto=1` lance directement une partie.

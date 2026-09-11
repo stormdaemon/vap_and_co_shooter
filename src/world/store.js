@@ -47,8 +47,8 @@ export class World {
       plaster: std({ color: 0xd6d3cc, roughness: 0.95 }),
       fabric: nscale(std({ map: L.fabric.map, normalMap: hi ? L.fabric.normalMap : null, roughness: 0.95 }), 0.6),
       leather: std({ color: 0x3a2a20, roughness: 0.6, metalness: 0.05 }),
-      glass: new THREE.MeshPhysicalMaterial({ color: 0xcfe8ee, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0, transmission: 0, envMapIntensity: 1.6, side: THREE.DoubleSide, depthWrite: false }),
-      glassFront: new THREE.MeshPhysicalMaterial({ color: 0xbfdde8, transparent: true, opacity: 0.14, roughness: 0.03, metalness: 0, envMapIntensity: 0.9, side: THREE.DoubleSide, depthWrite: false }),
+      glass: std({ color: 0xcfe8ee, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0, envMapIntensity: 1.6, depthWrite: false }),
+      glassFront: std({ color: 0xbfdde8, transparent: true, opacity: 0.14, roughness: 0.03, metalness: 0, envMapIntensity: 0.9, depthWrite: false }),
       pink: std({ color: 0xff4fa3, roughness: 0.35, metalness: 0, emissive: 0xff2a7f, emissiveIntensity: 0.12 }),
       pinkDark: std({ color: 0xd8347f, roughness: 0.4 }),
       leaf: std({ color: 0x3f8f3a, roughness: 0.8, side: THREE.DoubleSide }),
@@ -81,7 +81,7 @@ export class World {
       cloth: std({ map: L.cloth, roughness: 0.95 }),
       price: std({ map: L.price, roughness: 0.8 }),
       cardboard: std({ color: 0xb08a5a, roughness: 0.95 }),
-      jar: new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0, envMapIntensity: 1.2 }),
+      jar: std({ color: 0xffffff, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0, envMapIntensity: 1.2 }),
       gummy: std({ color: 0xff7bb0, roughness: 0.35, emissive: 0xff2a7f, emissiveIntensity: 0.1 }),
       road: std({ color: 0x2e3033, roughness: 0.98 }),
       sidewalk: std({ color: 0x9a9791, roughness: 0.95 }),
@@ -226,8 +226,6 @@ export class World {
     B.box(M.black, 17.2, 1.06, 0.06, 0, 4.65, -12.6, { tex: 0 });
     B.cyl(M.cbd, 0.54, 0.54, 0.05, -4.6, 4.65, -12.54, { seg: 32, rx: PI / 2 });
     B.cyl(M.logo, 0.54, 0.54, 0.05, 3.5, 4.65, -12.54, { seg: 32, rx: PI / 2 });
-    this.pointLight(0x5ef2ff, 6, -4.6, 4.65, -12.2, 5);
-    this.pointLight(0xff4fa3, 6, 3.5, 4.65, -12.2, 5);
     // neon signs on the back wall band
     this.mesh(new THREE.PlaneGeometry(3.2, 1.6), M.neonVap, 0.5, 5.65, -12.82, { cast: false, receive: false });
     this.mesh(new THREE.PlaneGeometry(2.4, 1.2), M.neonCbd, -5.6, 5.7, -12.82, { cast: false, receive: false });
@@ -320,7 +318,7 @@ export class World {
     // posters on the wainscot
     B.plane(M.poster1, 0.7, 1.05, -8.53, 1.9, -6.5, { ry: PI / 2, cast: false });
     B.plane(M.poster2, 0.7, 1.05, -8.53, 1.9, 10.2, { ry: PI / 2, cast: false });
-    this.pointLight(0x39ff5a, 3, -7.8, 2.8, -2, 5); this.pointLight(0x39ff5a, 3, -7.8, 2.8, 5, 5);
+    this.pointLight(0x39ff5a, 4, -7.8, 2.8, 1.5, 8);
   }
   hookah(x, y, z) {
     const B = this.batch, M = this.M;
@@ -428,7 +426,7 @@ export class World {
     // roof: 8 sectors of slats (cones approximated with a low cone + rafters)
     const roof = new THREE.ConeGeometry(2.5, 0.55, 8, 1, true); roof.rotateY(PI / 8); transform(roof, cx, 3.6, cz);
     { const uv = roof.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 8, uv.getY(i) * 1.5); }
-    B.add(M.darkwood, roof); this.M.darkwood.side = THREE.DoubleSide;
+    if (!M.roofwood) { M.roofwood = M.darkwood.clone(); M.roofwood.side = THREE.DoubleSide; } B.add(M.roofwood, roof);
     for (let k = 0; k < 8; k++) { const a = k / 8 * PI * 2 + PI / 8; B.box(M.wood, 0.08, 0.1, 2.5, cx + Math.cos(a) * 1.25, 3.6, cz + Math.sin(a) * 1.25, { ry: -a + PI / 2, rx: 0.22, tex: 0.6 }); }
     B.cyl(M.darkwood, 0.4, 0.4, 0.1, cx, 3.85, cz, { seg: 8 });
     B.cyl(M.ledWarm, 0.12, 0.12, 0.03, cx, 3.32, cz, { seg: 12, cast: false });
@@ -564,21 +562,19 @@ export class World {
     const hemi = new THREE.HemisphereLight(0xe4ecff, 0x5a4a3a, 0.9); s.add(hemi);
     // daylight through the shopfront (+Z)
     const sun = new THREE.DirectionalLight(0xfff1dc, 1.25); sun.position.set(6, 12, 30); sun.target.position.set(0, 0, 2); s.add(sun); s.add(sun.target);
-    sun.castShadow = true; sun.shadow.mapSize.set(q === 'low' ? 1024 : 2048, q === 'low' ? 1024 : 2048);
+    sun.castShadow = true; const sm = q === 'low' ? 1024 : q === 'med' ? 1536 : 2048; sun.shadow.mapSize.set(sm, sm);
     const sc = sun.shadow.camera; sc.left = -12; sc.right = 12; sc.top = 16; sc.bottom = -16; sc.near = 5; sc.far = 60; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03; sun.shadow.radius = 2;
     this.sun = sun;
     // ceiling spots (pendants)
-    const spots = [[-4.4, -4.1], [3.8, -4.1], [-4.4, 3], [3.8, 3], [-4.4, 9.4], [3.8, 9.4]];
-    const shadowSpots = q === 'high' ? 3 : q === 'med' ? 1 : 0;
+    const spots = q === 'low' ? [[-4.4, -4.1], [3.8, -4.1], [-4.4, 3], [3.8, 3]] : [[-4.4, -4.1], [3.8, -4.1], [-4.4, 3], [3.8, 3], [-4.4, 9.4], [3.8, 9.4]];
+    const shadowSpots = q === 'high' ? 2 : 0;
     spots.forEach(([x, z], i) => {
       const sp = new THREE.SpotLight(0xffe2b8, 34, 14, 0.85, 0.6, 1.6); sp.position.set(x, 5.25, z); sp.target.position.set(x, 0, z); s.add(sp); s.add(sp.target);
       if (i < shadowSpots) { sp.castShadow = true; sp.shadow.mapSize.set(1024, 1024); sp.shadow.bias = -0.0008; sp.shadow.normalBias = 0.02; sp.shadow.camera.near = 0.5; sp.shadow.camera.far = 12; }
       this.lights.push(sp);
     });
     // back-of-store warm fill
-    this.pointLight(0xffd7a8, 7, 0, 3.5, -10.5, 12, 1.6);
-    this.pointLight(0xffd7a8, 4, -5.5, 3.5, -10.5, 9, 1.6);
-    this.pointLight(0xffd7a8, 4, 6, 3.5, -10.5, 9, 1.6);
+    this.pointLight(0xffd7a8, 9, 0, 3.5, -10.5, 16, 1.5);
     // lit sign band ambience
     this.ambient = hemi;
   }
@@ -606,12 +602,12 @@ export class World {
     return { dist: best, normal };
   }
   hasLineOfSight(a, b) {
-    const dir = new THREE.Vector3().subVectors(b, a); const len = dir.length(); if (len < 1e-4) return true; dir.divideScalar(len);
-    return this.raycast(a, dir, len - 0.05).dist >= len - 0.05;
+    const dir = _losDir.subVectors(b, a); const len = dir.length(); if (len < 1e-4) return true; dir.divideScalar(len);
+    const max = len - 0.05; for (const box of this.occluders) { const t = rayBox(a, dir, box, max); if (t !== null && t < max) return false; } return true;
   }
 }
 
-const _inv = [0, 0, 0];
+const _losDir = new THREE.Vector3();
 export function rayBox(o, d, b, maxT = Infinity) {
   let tmin = 0, tmax = maxT;
   for (let i = 0; i < 3; i++) {

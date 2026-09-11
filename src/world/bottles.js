@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { labelUV } from '../engine/textures.js';
 
 export class Bottles {
-  constructor(scene, world) {
+  constructor(scene, world, quality = 'med') {
     this.scene = scene; this.world = world;
     const spots = world.bottleSpots; const n = spots.length; this.n = n;
     const body = new THREE.CylinderGeometry(1, 1, 1, 12, 1); body.translate(0, 0.5, 0);
@@ -23,7 +23,7 @@ export class Bottles {
       color.setHSL((i * 0.137) % 1, 0.6, 0.6); this.mesh.setColorAt(i, color.lerp(new THREE.Color(1, 1, 1), 0.6));
     }
     body.setAttribute('labelUv', new THREE.InstancedBufferAttribute(lab, 4));
-    this.mesh.castShadow = true; this.mesh.receiveShadow = true; this.caps.castShadow = true;
+    this.mesh.castShadow = quality === 'high'; this.mesh.receiveShadow = true; this.caps.castShadow = false;
     this.mesh.instanceMatrix.needsUpdate = true; this.caps.instanceMatrix.needsUpdate = true; if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     scene.add(this.mesh); scene.add(this.caps);
     // spatial buckets for fast hit tests

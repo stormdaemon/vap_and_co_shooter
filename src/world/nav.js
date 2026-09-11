@@ -30,7 +30,8 @@ export class NavGrid {
     if (!this.isFree(ti, tj)) { const n = this.nearestFree(tx, tz); [ti, tj] = this.cell(n[0], n[1]); }
     if (!this.isFree(si, sj) || !this.isFree(ti, tj)) return null;
     const W = this.w, H = this.h, N = W * H;
-    const g = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+    if (!this._g) { this._g = new Float32Array(N); this._from = new Int32Array(N); this._closed = new Uint8Array(N); }
+    const g = this._g.fill(Infinity), from = this._from.fill(-1), closed = this._closed.fill(0);
     const start = sj * W + si, goal = tj * W + ti;
     g[start] = 0;
     const heap = [[0, start]];

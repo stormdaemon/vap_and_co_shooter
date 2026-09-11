@@ -94,7 +94,7 @@ export class Zinzin {
     for (const sx of [-1, 1]) part(new THREE.SphereGeometry(S(0.035), 6, 6), this.head, 'skin', sx * S(0.125), S(0.13), 0);
     for (let i = 0; i < 2; i++) {
       const a = this.arms[i], l = this.legs[i];
-      part(new THREE.SphereGeometry(S(0.075), 8, 8), a.sh, 'shirt');
+      part(new THREE.SphereGeometry(S(0.075), 6, 5), a.sh, 'shirt');
       part(tr(RB(0.12, 0.32, 0.12, 0.04), 0, -0.14, 0), a.sh, 'shirt');
       part(tr(RB(0.1, 0.3, 0.1, 0.04), 0, -0.14, 0), a.el, 'skin');
       part(tr(RB(0.09, 0.11, 0.06, 0.025), 0, -0.33, 0), a.el, 'skin');
@@ -152,7 +152,7 @@ export class Zinzin {
     }
     const toT = P.pos.clone().sub(this.pos).setY(0); const dist = toT.length();
     const T = this.T; let move = V();
-    const los = W.hasLineOfSight(this.chest, P.eyePos);
+    if (this.losT === undefined || (this.losT -= dt) <= 0) { this.losT = 0.12 + Math.random() * 0.08; this.los = W.hasLineOfSight(this.chest, P.eyePos); } const los = this.los;
     if (t - this.lastTaunt > 9 && Math.random() < dt * 0.15 && dist < 12) { this.lastTaunt = t; g.fx.text(this.headPos.clone().setY(this.headPos.y + 0.35), this.type === 'influenceur' ? 'LIKE ET ABONNE-TOI !' : TAUNTS[Math.floor(Math.random() * TAUNTS.length)], { color: '#ffe', size: 13, life: 1.6, glow: '#000' }); g.audio.play(Math.random() < 0.5 ? 'laugh' : 'grunt', this.pos); }
     if (T.ranged || T.support) {
       if (dist > T.keep + 1.5 || (!los && !T.support)) move = this.follow(dt, P.pos); else if (dist < T.keep - 2) move = toT.clone().normalize().multiplyScalar(-1); else { move = new THREE.Vector3(-toT.z, 0, toT.x).normalize().multiplyScalar(Math.sin(this.phase * 0.7) > 0 ? 1 : -1); if (W.isBlocked(this.pos.x + move.x * 0.6, this.pos.z + move.z * 0.6, 0.3, this.pos.y)) move.set(0, 0, 0); }
@@ -241,7 +241,7 @@ export class Zinzin {
   }
   trap(dur = 4) {
     if (!this.alive || this.T.boss) return false; this.trapped = dur; this.charge = null; this.fuse = -1; this.vel.set(0, 0, 0);
-    if (!this.bubble) { this.bubble = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshPhysicalMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, envMapIntensity: 1.8, depthWrite: false, side: THREE.DoubleSide })); this.mesh.add(this.bubble); }
+    if (!this.bubble) { this.bubble = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, envMapIntensity: 1.8, depthWrite: false })); this.mesh.add(this.bubble); }
     this.bubble.visible = true; const r = this.height * 0.62; this.bubble.scale.setScalar(r); this.bubble.position.y = this.height * 0.5;
     this.g.fx.text(this.headPos, 'BULLE !', { color: '#5ef2ff', size: 16 }); return true;
   }
@@ -253,7 +253,7 @@ export class Zinzin {
     this.hp -= amount; const T = this.T;
     const kb = knock / Math.sqrt(T.weight); this.knock.addScaledVector(dir.clone().setY(0).normalize(), kb);
     if (!this.charge) this.stagger = Math.max(this.stagger, T.boss ? 0.08 : Math.min(0.45, 0.12 + kb * 0.03)); this.hitFlash = 0.09;
-    if (this.hp <= 0) { if (T.kamikaze) { this.g.explode(this.chest, 2, 30, 'enemy', 'kamikaze'); } this.die(dir, knock); return true; }
+    if (this.hp <= 0) { this.die(dir, knock); if (T.kamikaze) this.g.explode(this.chest, 2, 30, 'enemy', 'kamikaze'); return true; }
     return false;
   }
   die(dir, knock) {

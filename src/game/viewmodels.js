@@ -22,7 +22,7 @@ export const VM_MATS = {
   lime: std({ color: 0xd7f06a, emissive: 0xd7f06a, emissiveIntensity: 0.3, roughness: 0.3 }),
   violet: std({ color: 0xb58cff, emissive: 0x8a5cff, emissiveIntensity: 0.35, roughness: 0.3 }),
   white: std({ color: 0xf2f2f2, roughness: 0.4, emissive: 0xf2f2f2, emissiveIntensity: 0.1 }),
-  glass: new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, depthWrite: false }),
+  glass: std({ color: 0xffffff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, depthWrite: false }),
   screen: std({ color: 0x0a1a20, emissive: 0x5ef2ff, emissiveIntensity: 0.5, roughness: 0.2 }),
 };
 

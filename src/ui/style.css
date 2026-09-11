@@ -1,7 +1,7 @@
 :root{
   color-scheme:dark;
   --paper:#f4f1e6;--muted:#aeb5a6;--lime:#d7f06a;--pink:#ff4fa3;--cyan:#5ef2ff;--orange:#ffb347;
-  --dark:#0b0f0c;--line:rgba(233,239,222,.16);--glass:rgba(12,18,14,.72);
+  --dark:#0b0f0c;--line:rgba(233,239,222,.16);--glass:rgba(12,18,14,.86);
   --font:"Inter","Segoe UI",system-ui,Arial,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -78,7 +78,7 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 #hitmarker.kill i{background:var(--pink);box-shadow:0 0 10px var(--pink)}
 
 #topbar{position:absolute;top:22px;left:50%;transform:translateX(-50%);display:flex;gap:10px}
-#topbar>div{min-width:130px;padding:10px 16px 12px;background:var(--glass);border:1px solid var(--line);border-radius:10px;backdrop-filter:blur(12px);text-align:center}
+#topbar>div{min-width:130px;padding:10px 16px 12px;background:var(--glass);border:1px solid var(--line);border-radius:10px;text-align:center}
 #topbar .big{font-size:30px;font-weight:500;letter-spacing:-.05em;line-height:1.1;margin-top:2px}
 #topbar .sub{font-size:10px;color:#c5cabc;letter-spacing:.02em;margin-top:4px;white-space:nowrap}
 .combo{font-weight:800;color:var(--lime);font-size:13px;display:inline-block;transition:transform .1s}
@@ -100,7 +100,7 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 .pu{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;background:#000a;border:1px solid var(--line);position:relative;overflow:hidden}
 .pu i{position:absolute;left:0;bottom:0;height:2px;background:currentColor}
 
-.card{position:absolute;bottom:26px;border:1px solid var(--line);border-radius:12px;background:var(--glass);backdrop-filter:blur(14px);padding:16px 20px;box-shadow:0 10px 35px #0004}
+.card{position:absolute;bottom:26px;border:1px solid var(--line);border-radius:12px;background:var(--glass);padding:16px 20px;box-shadow:0 10px 35px #0004}
 #healthcard{left:26px;width:250px}
 #healthcard .row{display:flex;justify-content:space-between;align-items:baseline}
 #healthcard strong{font-size:30px;letter-spacing:-.06em;font-weight:500}
@@ -136,7 +136,7 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 #lowhp.on{animation:pulse 1s infinite}
 @keyframes pulse{0%{opacity:.15}50%{opacity:.6}100%{opacity:.15}}
 #fps{position:absolute;left:26px;top:22px;font-size:11px;color:#9fac95;display:none}
-#minimapBox{position:absolute;right:26px;top:22px;border:1px solid var(--line);border-radius:10px;background:var(--glass);padding:6px;backdrop-filter:blur(10px)}
+#minimapBox{position:absolute;right:26px;top:22px;border:1px solid var(--line);border-radius:10px;background:var(--glass);padding:6px}
 #minimap{display:block;width:200px;height:150px;border-radius:6px}
 
 @media(max-width:900px){#healthcard{width:190px;left:14px;padding:12px}#weaponcard{width:210px;right:14px;padding:12px}#topbar>div{min-width:96px;padding:8px 10px}#topbar .big{font-size:22px}#minimapBox{display:none}}

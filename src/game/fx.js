@@ -33,7 +33,7 @@ export class FX {
     g.setDrawRange(0, N);
     // ----- puffs (sprites) for vapor
     this.puffTex = puffTex(); this.puffs = []; this.puffPool = [];
-    const PN = quality === 'low' ? 60 : 160;
+    const PN = quality === 'low' ? 56 : quality === 'med' ? 96 : 160;
     for (let i = 0; i < PN; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.puffTex, transparent: true, depthWrite: false, opacity: 0, color: 0xffffff })); s.visible = false; scene.add(s); this.puffPool.push(s); }
     // ----- tracers
     this.tracers = []; const TN = 48; this.tracerPool = [];
@@ -46,11 +46,11 @@ export class FX {
     // ----- debris (instanced cubes with physics)
     const BN = this.BN = quality === 'low' ? 80 : 220;
     this.debris = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 }), BN);
-    this.debris.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.debris.castShadow = quality === 'high'; this.debris.frustumCulled = false; scene.add(this.debris);
+    this.debris.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.debris.castShadow = false; this.debris.frustumCulled = false; scene.add(this.debris);
     this.dData = []; for (let i = 0; i < BN; i++) { this.dData.push({ life: 0, p: new THREE.Vector3(), v: new THREE.Vector3(), r: new THREE.Euler(), rv: new THREE.Vector3(), s: 0.05 }); const m = new THREE.Matrix4().makeScale(0, 0, 0); this.debris.setMatrixAt(i, m); this.debris.setColorAt(i, new THREE.Color(1, 1, 1)); }
     this.debris.instanceMatrix.needsUpdate = true; this.dNext = 0;
     // ----- lights (pooled point lights for muzzle flashes / explosions)
-    this.lightPool = []; for (let i = 0; i < (quality === 'low' ? 2 : 4); i++) { const l = new THREE.PointLight(0xffffff, 0, 8, 2); scene.add(l); this.lightPool.push({ l, life: 0, max: 0, intensity: 0 }); }
+    this.lightPool = []; for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xffffff, 0, 8, 2); scene.add(l); this.lightPool.push({ l, life: 0, max: 0, intensity: 0 }); }
     // ----- shockwave rings
     this.rings = []; this.ringPool = []; for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; m.visible = false; scene.add(m); this.ringPool.push(m); }
     // ----- floating text (DOM)
@@ -64,7 +64,7 @@ export class FX {
     const i = this.pNext; this.pNext = (i + 1) % this.N;
     this.pPos[i * 3] = x; this.pPos[i * 3 + 1] = y; this.pPos[i * 3 + 2] = z; this.pVel[i * 3] = vx; this.pVel[i * 3 + 1] = vy; this.pVel[i * 3 + 2] = vz;
     this.pCol[i * 3] = color[0]; this.pCol[i * 3 + 1] = color[1]; this.pCol[i * 3 + 2] = color[2];
-    this.pLife[i] = life; this.pMax[i] = life; this.pSize[i] = size; this.pAlpha[i] = alpha; this.pGrav[i] = grav; this.pDrag[i] = drag; this.pBounce[i] = bounce ? 1 : 0; this.pShrink[i] = shrink;
+    this.pAlive = Math.max(this.pAlive || 0, 1); this.pLife[i] = life; this.pMax[i] = life; this.pSize[i] = size; this.pAlpha[i] = alpha; this.pGrav[i] = grav; this.pDrag[i] = drag; this.pBounce[i] = bounce ? 1 : 0; this.pShrink[i] = shrink;
   }
   burst(p, n, { speed = 3, spread = 1, color = [1, 0.8, 0.4], life = 0.5, size = 0.05, grav = 6, drag = 1, dir = null, bounce = 1, shrink = 1 } = {}) {
     for (let i = 0; i < n; i++) {
@@ -139,16 +139,17 @@ export class FX {
   update(dt, camera) {
     this.t += dt; const W = this.world;
     // particles
-    const P = this.pPos, V = this.pVel;
-    for (let i = 0; i < this.N; i++) {
-      if (this.pLife[i] <= 0) { this.pAlpha[i] = 0; continue; }
+    const P = this.pPos, V = this.pVel; let alive = 0;
+    if (this.pAlive) for (let i = 0; i < this.N; i++) {
+      if (this.pLife[i] <= 0) { this.pAlpha[i] = 0; continue; } alive++;
       this.pLife[i] -= dt; const k = this.pLife[i] / this.pMax[i];
       V[i * 3 + 1] -= this.pGrav[i] * dt; const dr = Math.exp(-this.pDrag[i] * dt); V[i * 3] *= dr; V[i * 3 + 1] *= dr; V[i * 3 + 2] *= dr;
       P[i * 3] += V[i * 3] * dt; P[i * 3 + 1] += V[i * 3 + 1] * dt; P[i * 3 + 2] += V[i * 3 + 2] * dt;
       if (this.pBounce[i]) { const fy = W.floorHeight(P[i * 3], P[i * 3 + 2]); if (P[i * 3 + 1] < fy + 0.01) { P[i * 3 + 1] = fy + 0.01; V[i * 3 + 1] = -V[i * 3 + 1] * 0.4; V[i * 3] *= 0.7; V[i * 3 + 2] *= 0.7; } }
       this.pAlpha[i] = Math.min(1, k * 2); if (this.pShrink[i]) this.pSize[i] *= 1 - dt * 0.6 * this.pShrink[i];
     }
-    const g = this.points.geometry; g.attributes.position.needsUpdate = true; g.attributes.alpha.needsUpdate = true; g.attributes.size.needsUpdate = true; g.attributes.color.needsUpdate = true;
+    if (this.pAlive) { const g = this.points.geometry; g.attributes.position.needsUpdate = true; g.attributes.alpha.needsUpdate = true; g.attributes.size.needsUpdate = true; g.attributes.color.needsUpdate = true; if (!alive) this.pAlive = 0; }
+    this.points.visible = !!this.pAlive;
     this.pMat.uniforms.scale.value = window.innerHeight * 0.5;
     // puffs
     for (let i = this.puffs.length - 1; i >= 0; i--) { const p = this.puffs[i]; p.life -= dt; const k = p.life / p.max; if (p.life <= 0) { p.s.visible = false; this.puffs.splice(i, 1); continue; } p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.exp(-dt * 1.5)); const sc = p.size * (1 + (1 - k) * p.grow); p.s.scale.setScalar(sc); const near = camera ? Math.min(1, p.s.position.distanceToSquared(camera.position) / 1.2) : 1; p.s.material.opacity = p.op * Math.min(1, k * 3) * (k < 0.5 ? k * 2 : 1) * near; p.s.material.rotation += p.rot * dt; }
