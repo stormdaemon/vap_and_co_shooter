@@ -46,8 +46,8 @@
       <div><kbd>Z Q S D</kbd> / <kbd>W A S D</kbd> déplacer</div>
       <div><kbd>Maj</kbd> courir · <kbd>C</kbd> glissade / accroupi · <kbd>Espace</kbd> sauter</div>
       <div><kbd>Clic G</kbd> tirer · <kbd>Clic D</kbd> viser · <kbd>R</kbd> recharger</div>
-      <div><kbd>E</kbd> coup de poing / interagir · <kbd>F</kbd> ramasser · <kbd>1-5</kbd> / molette armes</div>
-      <div>Double-tap direction : <b>dash</b> · Courir + <kbd>C</kbd> : glissade · <kbd>Échap</kbd> pause</div>
+      <div><kbd>E</kbd> coup de poing · <kbd>F</kbd> ramasser / boutique · <kbd>1-7</kbd> / molette armes</div>
+      <div><kbd>G</kbd> Gummy-Bombe · <kbd>X</kbd> ultime · <kbd>L</kbd> lampe · double-tap : dash · <kbd>Échap</kbd> pause</div>
     </div>
     <div class="intro-foot">Reconstitution 3D interprétée du magasin Vap&Co · Personnages fictifs · Aucun effet sanglant, uniquement de la vapeur.</div>
   </div>
@@ -64,27 +64,30 @@
     <div id="scorecard"><div class="eyebrow">SCORE</div><div class="big" id="score">0</div><div class="sub"><span id="combo" class="combo">×1</span> <span id="comboLabel"></span></div></div>
     <div id="enemycard"><div class="eyebrow">ZINZINS</div><div class="big" id="enemiesLeft">0</div><div class="sub" id="killCount">0 hors combat</div></div>
   </div>
+  <div id="modBadge" class="hidden"></div>
 
   <div id="announce"><div id="announceMain"></div><div id="announceSub"></div></div>
   <div id="powerups"></div>
   <div id="bossbar" class="hidden"><div class="eyebrow" id="bossName">LE PATRON ZINZIN</div><div class="track"><div id="bossFill"></div></div></div>
 
   <div id="healthcard" class="card">
-    <div class="row"><span class="eyebrow">VITALITÉ</span><strong><span id="hp">100</span><small>/ 100</small></strong></div>
+    <div class="row"><span class="eyebrow">VITALITÉ</span><strong><span id="hp">100</span><small id="hpMax">/ 100</small></strong></div>
     <div class="track"><div id="hpFill"></div></div>
     <div class="row"><span class="eyebrow">ÉNERGIE</span><span class="eyebrow" id="stamLabel">DASH PRÊT</span></div>
     <div class="track slim"><div id="stamFill"></div></div>
+    <div class="row" style="margin-top:8px"><span class="eyebrow" id="ultLabel">ULTIME 0%</span></div>
+    <div class="track slim ult"><div id="ultFill"></div></div>
   </div>
 
   <div id="weaponcard" class="card">
     <div class="wslots" id="wslots"></div>
     <div id="weaponName">Poings</div>
     <div id="weaponDesc">Clic gauche : cogner</div>
-    <div class="ammo"><span id="ammoMag">∞</span><span id="ammoRes"></span></div>
+    <div class="ammo"><span id="ammoMag">∞</span><span id="ammoRes"></span><span id="grenades" class="gren">G · 2 bombes</span></div>
     <div class="track slim"><div id="reloadFill"></div></div>
   </div>
 
-  <div id="prompt" class="hidden"><kbd>F</kbd><div><div id="promptName"></div><div id="promptSub"></div></div></div>
+  <div id="prompt" class="hidden"><kbd id="promptKey">F</kbd><div><div id="promptName"></div><div id="promptSub"></div></div></div>
   <div id="toast"></div>
   <div id="dmgVignette"></div>
   <div id="dmgDir"></div>
@@ -112,6 +115,17 @@
       <label>Sensibilité <input type="range" id="rngSens" min="0.3" max="3" step="0.1" value="1"></label>
       <label>FOV <input type="range" id="rngFov" min="65" max="110" step="1" value="82"></label>
     </div>
+  </div>
+</div>
+
+<!-- ================= SHOP ================= -->
+<div id="shop" class="screen hidden">
+  <div class="panel shop-panel">
+    <div class="eyebrow">BOUTIQUE DU PATRON · ENTRE DEUX VAGUES</div>
+    <h2>Dépensez vos points.</h2>
+    <p>Solde : <b id="shopScore">0</b> pts. Les prix montent à chaque achat. <span class="muted">F ou Échap pour fermer.</span></p>
+    <div id="shopItems" class="shop-grid"></div>
+    <div class="ov-actions"><button class="primary" id="btnShopClose">Retour au combat</button></div>
   </div>
 </div>
 

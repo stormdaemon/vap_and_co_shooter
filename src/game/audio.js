@@ -84,6 +84,18 @@ export class Audio {
       case 'gameover': this.tone({ freq: 330, freqEnd: 110, dur: 1.6, type: 'sawtooth', vol: 0.3 }); this.tone({ freq: 415, freqEnd: 140, dur: 1.6, type: 'square', vol: 0.15 }); break;
       case 'door': this.noiseBurst({ dur: 0.4, freq: 300, freqEnd: 1200, type: 'bandpass', q: 2, vol: 0.2, pos, attack: 0.1 }); break;
       case 'coin': this.tone({ freq: 1975, dur: 0.06, type: 'square', vol: 0.1 }); this.tone({ freq: 2637, dur: 0.25, type: 'square', vol: 0.1, delay: 0.06 }); break;
+      case 'laser_start': this.tone({ freq: 300, freqEnd: 1800, dur: 0.25, type: 'sawtooth', vol: 0.15 }); break;
+      case 'laser_stop': this.tone({ freq: 1400, freqEnd: 200, dur: 0.2, type: 'sawtooth', vol: 0.1 }); break;
+      case 'laser_loop': this.tone({ freq: 1200 + Math.random() * 200, freqEnd: 1100, dur: 0.12, type: 'sawtooth', vol: 0.05 }); break;
+      case 'overheat': this.noiseBurst({ dur: 0.8, freq: 3000, freqEnd: 300, vol: 0.4, attack: 0.05 }); this.tone({ freq: 220, freqEnd: 80, dur: 0.6, type: 'square', vol: 0.12 }); break;
+      case 'bubble': this.tone({ freq: 500, freqEnd: 1600, dur: 0.25, type: 'sine', vol: 0.25, pos }); this.noiseBurst({ dur: 0.15, freq: 2000, freqEnd: 4000, type: 'bandpass', q: 2, vol: 0.12, pos }); break;
+      case 'bubble_pop': this.tone({ freq: 1800, freqEnd: 400, dur: 0.1, type: 'sine', vol: 0.25, pos }); this.noiseBurst({ dur: 0.08, freq: 5000, freqEnd: 2000, vol: 0.25, pos }); break;
+      case 'ult': this.tone({ freq: 60, freqEnd: 30, dur: 1.6, type: 'sine', vol: 0.9 }); this.noiseBurst({ dur: 1.6, freq: 300, freqEnd: 6000, type: 'bandpass', q: 1.5, vol: 0.6, attack: 0.2 }); for (let i = 0; i < 6; i++) this.tone({ freq: 220 * Math.pow(2, i / 6), dur: 0.5, type: 'sawtooth', vol: 0.12, delay: i * 0.08 }); break;
+      case 'ult_ready': this.tone({ freq: 880, dur: 0.12, type: 'square', vol: 0.12 }); this.tone({ freq: 1320, dur: 0.25, type: 'square', vol: 0.12, delay: 0.12 }); break;
+      case 'buy': this.tone({ freq: 1200, dur: 0.06, type: 'square', vol: 0.12 }); this.tone({ freq: 1600, dur: 0.12, type: 'square', vol: 0.12, delay: 0.07 }); this.tone({ freq: 2400, dur: 0.2, type: 'sine', vol: 0.1, delay: 0.14 }); break;
+      case 'deny': this.tone({ freq: 200, freqEnd: 120, dur: 0.2, type: 'square', vol: 0.12 }); break;
+      case 'beep': this.tone({ freq: 2000, dur: 0.05, type: 'square', vol: 0.1, pos }); break;
+      case 'blackout': this.noiseBurst({ dur: 0.6, freq: 800, freqEnd: 60, vol: 0.5 }); this.tone({ freq: 120, freqEnd: 30, dur: 0.9, type: 'sine', vol: 0.4 }); break;
       case 'ricochet': this.tone({ freq: 3000 + Math.random() * 2000, freqEnd: 400, dur: 0.15, type: 'sine', vol: 0.12, pos }); break;
     }
   }

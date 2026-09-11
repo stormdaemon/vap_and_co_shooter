@@ -71,6 +71,7 @@ export class Renderer {
     r.toneMappingExposure = 0.95;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
+    r.shadowMap.autoUpdate = false; this.shadowEvery = quality === 'low' ? 3 : quality === 'med' ? 2 : 1; this.frameNo = 0;
     r.info.autoReset = false;
     this.pixelRatio = Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : quality === 'med' ? 1.5 : 1);
     this.dynamicScale = 1;
@@ -130,6 +131,7 @@ export class Renderer {
   render(t) {
     this.grade.uniforms.uTime.value = t;
     this.r.info.reset();
+    if (this.frameNo % this.shadowEvery === 0) this.r.shadowMap.needsUpdate = true; this.frameNo++;
     this.composer.render();
   }
 }

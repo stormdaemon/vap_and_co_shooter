@@ -91,7 +91,7 @@ export class Player {
     this.slideCd = Math.max(0, (this.slideCd || 0) - h);
     // dash (double-tap direction or Ctrl+direction) — 2.4s cooldown, stamina
     this.dashCd = Math.max(0, this.dashCd - h);
-    this.stamina = Math.min(1, this.stamina + h / 2.4);
+    this.stamina = Math.min(1, this.stamina + h / (2.4 * (this.dashCdMul || 1)));
     const dashKeys = { KeyW: [0, 1], KeyS: [0, -1], KeyA: [-1, 0], KeyD: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
     if (this.stamina >= 0.99 && inp.doubleTap && dashKeys[inp.doubleTap] && !this.dead) {
       const d = dashKeys[inp.doubleTap]; this.dashDir.set(0, 0, 0).addScaledVector(rt, d[0]).addScaledVector(fw, d[1]).normalize();

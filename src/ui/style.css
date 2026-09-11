@@ -140,3 +140,21 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 #minimap{display:block;width:200px;height:150px;border-radius:6px}
 
 @media(max-width:900px){#healthcard{width:190px;left:14px;padding:12px}#weaponcard{width:210px;right:14px;padding:12px}#topbar>div{min-width:96px;padding:8px 10px}#topbar .big{font-size:22px}#minimapBox{display:none}}
+
+/* ---------- round 2 ---------- */
+#modBadge{position:absolute;top:118px;left:50%;transform:translateX(-50%);padding:6px 14px;border:1px solid;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:.18em;background:#000b;text-shadow:0 0 10px currentColor}
+.track.ult{background:#ffffff10}.track.ult #ultFill{height:100%;width:0;background:linear-gradient(90deg,#5ef2ff,#b58cff);transition:width .2s}
+.track.ult.ready{box-shadow:0 0 12px #5ef2ff;animation:ultpulse 1s infinite}
+@keyframes ultpulse{50%{box-shadow:0 0 22px #5ef2ff}}
+.gren{margin-left:auto;font-size:10px;letter-spacing:.08em;color:#ffb0d0;border:1px solid #ff4fa355;padding:3px 7px;border-radius:5px;align-self:center}
+.gren.empty{opacity:.4}
+.shop-panel{width:760px;max-width:100%}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:16px 0}
+.shop-item{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#ffffff08;cursor:pointer;transition:background .12s,transform .12s}
+.shop-item:hover{background:#ffffff14;transform:translateY(-2px)}
+.shop-item.off{opacity:.45}
+.si-name{font-weight:700;font-size:13px}.si-name small{color:#aeb5a6;font-weight:500}
+.si-desc{font-size:11px;color:#aeb5a6;margin-top:3px;line-height:1.5}
+.si-cost{margin-top:8px;font-size:12px;font-weight:700;color:var(--lime)}
+.muted{color:#7d857a}
+#shop{z-index:22}
