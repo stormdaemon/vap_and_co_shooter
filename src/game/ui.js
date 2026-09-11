@@ -9,7 +9,7 @@ export class UI {
       wave: $('#waveNum'), waveState: $('#waveState'), score: $('#score'), combo: $('#combo'), comboLabel: $('#comboLabel'), enemies: $('#enemiesLeft'), kills: $('#killCount'),
       wname: $('#weaponName'), wdesc: $('#weaponDesc'), mag: $('#ammoMag'), res: $('#ammoRes'), reload: $('#reloadFill'), slots: $('#wslots'), wcard: $('#weaponcard'),
       prompt: $('#prompt'), promptName: $('#promptName'), promptSub: $('#promptSub'), toast: $('#toast'), announce: $('#announce'), aMain: $('#announceMain'), aSub: $('#announceSub'),
-      vign: $('#dmgVignette'), dir: $('#dmgDir'), lowhp: $('#lowhp'), fps: $('#fps'), cross: $('#crosshair'), hit: $('#hitmarker'), pus: $('#powerups'), minimap: $('#minimap'),
+      vign: $('#dmgVignette'), bossbar: $('#bossbar'), bossFill: $('#bossFill'), dir: $('#dmgDir'), lowhp: $('#lowhp'), fps: $('#fps'), cross: $('#crosshair'), hit: $('#hitmarker'), pus: $('#powerups'), minimap: $('#minimap'),
     };
     this.toastT = 0; this.announceT = 0; this.vign = 0; this.dirT = 0; this.hitT = 0; this.tick = 0; this.fpsAcc = 0; this.fpsN = 0; this.showFps = false;
     this.mm = this.el.minimap.getContext('2d');
@@ -51,6 +51,7 @@ export class UI {
     e.combo.textContent = `×${g.combo}`; e.combo.classList.toggle('hot', g.combo >= 5); e.comboLabel.textContent = g.combo >= 2 ? this.comboName(g.combo) : '';
     const alive = g.enemies.alive.length; e.enemies.textContent = alive; e.kills.textContent = `${g.stats.kills} hors combat`;
     this.refreshWeapon();
+    const boss = g.boss; e.bossbar.classList.toggle('hidden', !boss); if (boss) e.bossFill.style.width = `${boss.hp / boss.maxHp * 100}%`;
     // powerups
     let h = ''; for (const k in g.powerups) { const p = g.powerups[k]; if (p.t > 0) h += `<div class="pu" style="color:${p.color}">${p.name}<i style="width:${p.t / p.max * 100}%"></i></div>`; } e.pus.innerHTML = h;
     if (this.showFps) { e.fps.style.display = 'block'; e.fps.textContent = `${Math.round(this.fpsN / this.fpsAcc)} FPS · ${g.R.r.info.render.calls} appels · ${(g.R.r.info.render.triangles / 1000).toFixed(0)}k tris · ${Math.round(g.R.dynamicScale * 100)}%`; } else e.fps.style.display = 'none';

@@ -6,9 +6,9 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 export const TYPES = {
   client:   { name: 'Client Pressé',      hp: 70,  speed: 2.9, dmg: 7,  range: 1.5, rate: 1.35, scale: 1.0, score: 100, color: 0x3b6bd6, shirt: '50ML ?!', mood: 1, weight: 1 },
   sprinter: { name: 'Stagiaire Caféiné',  hp: 40,  speed: 5.2, dmg: 5,  range: 1.3, rate: 0.75, scale: 0.9, score: 120, color: 0xd7f06a, shirt: 'STAGE', mood: 2, weight: 0.8, zigzag: true },
-  vapoteur: { name: 'Vapoteur Enragé',    hp: 90,  speed: 2.4, dmg: 14, range: 9,   rate: 1.6, scale: 1.05, score: 160, color: 0x8b4fd6, shirt: 'CLOUD', mood: 2, weight: 1.1, ranged: 'vapor', keep: 5.5 },
+  vapoteur: { name: 'Vapoteur Enragé',    hp: 90,  speed: 2.4, dmg: 11, range: 9,   rate: 1.6, scale: 1.05, score: 160, color: 0x8b4fd6, shirt: 'CLOUD', mood: 2, weight: 1.1, ranged: 'vapor', keep: 5.5 },
   mamie:    { name: 'Mamie CBD',          hp: 240, speed: 1.7, dmg: 22, range: 1.9, rate: 1.5, scale: 1.08, score: 260, color: 0xe2c9a0, shirt: 'CBD ♥', mood: 1, weight: 2.5, hair: '#dedede', glasses: true },
-  vigile:   { name: 'Vigile Zinzin',      hp: 150, speed: 2.6, dmg: 8,  range: 12,  rate: 0.45, scale: 1.12, score: 300, color: 0x1a1d22, shirt: 'SECU', mood: 1, weight: 1.6, ranged: 'gun', keep: 7, beard: true },
+  vigile:   { name: 'Vigile Zinzin',      hp: 150, speed: 2.6, dmg: 7,  range: 12,  rate: 0.85, scale: 1.12, score: 300, color: 0x1a1d22, shirt: 'SECU', mood: 1, weight: 1.6, ranged: 'gun', keep: 7, beard: true },
   boss:     { name: 'LE PATRON ZINZIN',   hp: 1400, speed: 2.2, dmg: 30, range: 14, rate: 1.2, scale: 1.35, score: 2500, color: 0xff4fa3, shirt: 'PATRON', mood: 3, weight: 6, ranged: 'rocket', keep: 6, boss: true, beard: true },
 };
 const TAUNTS = ['T\'AS PAS DE 50 ML ?!', 'JE VEUX PARLER AU PATRON', 'C\'EST OÙ LES PROMOS ?', 'VAPOTER C\'EST LA VIE', 'MON CLOUD EST PLUS GROS', 'ZINZIN !!!', 'FRAISE OU MENTHE ?', 'JE SUIS PAS FOU', 'CBD POUR TOUS', 'RENDS-MOI MON FLAMANT'];

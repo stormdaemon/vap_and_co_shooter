@@ -33,6 +33,7 @@ export class Weapons {
     this.projectiles = []; this.drops = [];
     this.fireRateMul = 1; this.damageMul = 1; this.infinite = false;
     this.vm = new THREE.Group(); this.camera.add(this.vm);
+    const vl = new THREE.PointLight(0xfff2e0, 0.35, 1.4, 1.5); vl.position.set(0.15, 0.25, -0.1); this.vm.add(vl);
     this.models = {}; this.buildModels();
     this.projGeo = { gummy: new THREE.SphereGeometry(0.06, 8, 6), flamant: null };
     this.projMat = { gummy: new THREE.MeshStandardMaterial({ color: 0xff4fa3, roughness: 0.3, emissive: 0xff2a7f, emissiveIntensity: 0.5 }) };
@@ -41,8 +42,8 @@ export class Weapons {
   // ------------------------------------------------------------- models
   mat(o) { return new THREE.MeshStandardMaterial(o); }
   buildModels() {
-    const mDark = this.mat({ color: 0x40444c, roughness: 0.4, metalness: 0.55 }), mSteel = this.mat({ color: 0x9aa2ab, roughness: 0.3, metalness: 1 }), mSkin = this.mat({ color: 0xd9a37e, roughness: 0.7 }), mSleeve = this.mat({ color: 0x2a3a30, roughness: 0.9 });
-    const mCyan = this.mat({ color: 0x5ef2ff, emissive: 0x5ef2ff, emissiveIntensity: 0.55, roughness: 0.2 }), mPink = this.mat({ color: 0xff4fa3, roughness: 0.35, emissive: 0xff2a7f, emissiveIntensity: 0.25 }), mOrange = this.mat({ color: 0xffb347, emissive: 0xff8a1f, emissiveIntensity: 1.2 }), mWood = this.mat({ color: 0x6b4a2e, roughness: 0.6 }), mGlass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, roughness: 0.05 }), mPlastic = this.mat({ color: 0xff7bb8, roughness: 0.4 });
+    const mDark = this.mat({ color: 0x3a3e46, roughness: 0.4, metalness: 0.5, emissive: 0x3a3e46, emissiveIntensity: 0.18 }), mSteel = this.mat({ color: 0x9aa2ab, roughness: 0.3, metalness: 0.9, emissive: 0x9aa2ab, emissiveIntensity: 0.12 }), mSkin = this.mat({ color: 0xd9a37e, roughness: 0.7, emissive: 0xd9a37e, emissiveIntensity: 0.12 }), mSleeve = this.mat({ color: 0x2a3a30, roughness: 0.9, emissive: 0x2a3a30, emissiveIntensity: 0.2 });
+    const mCyan = this.mat({ color: 0x5ef2ff, emissive: 0x5ef2ff, emissiveIntensity: 0.3, roughness: 0.2 }), mPink = this.mat({ color: 0xff4fa3, roughness: 0.35, emissive: 0xff2a7f, emissiveIntensity: 0.25 }), mOrange = this.mat({ color: 0xffb347, emissive: 0xff8a1f, emissiveIntensity: 1.2 }), mWood = this.mat({ color: 0x6b4a2e, roughness: 0.6 }), mGlass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, roughness: 0.05 }), mPlastic = this.mat({ color: 0xff7bb8, roughness: 0.4 });
     const box = (m, w, h, d, x, y, z, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = false; return o; };
     const cyl = (m, r0, r1, h, x, y, z, rx = 0, ry = 0, rz = 0, seg = 14) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, seg), m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); return o; };
     const hand = (side = 1) => { const g = new THREE.Group(); g.add(box(mSkin, 0.075, 0.06, 0.1, 0, 0, 0)); for (let i = 0; i < 4; i++) g.add(box(mSkin, 0.016, 0.05, 0.02, -0.03 + i * 0.02, -0.02, 0.055)); g.add(box(mSkin, 0.02, 0.05, 0.02, side * 0.045, 0.0, 0.02, 0, 0, side * 0.5)); g.add(box(mSleeve, 0.1, 0.09, 0.14, 0, 0.005, -0.11)); return g; };

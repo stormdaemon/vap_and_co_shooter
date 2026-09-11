@@ -6,6 +6,7 @@ import { Weapons, WEAPONS } from './weapons.js';
 import { Enemies } from './enemies.js';
 import { Waves } from './waves.js';
 import { UI } from './ui.js';
+import { Props } from './props.js';
 
 const $ = s => document.querySelector(s);
 const PU = {
@@ -28,6 +29,7 @@ export class Game {
     this.weapons = new Weapons(this);
     this.enemies = new Enemies(this);
     this.waves = new Waves(this);
+    this.props = new Props(this);
     this.R.scene.add(this.R.camera); // so the viewmodel renders
     const P = this.player;
     P.onFootstep = (run) => this.audio.play('footstep', null, { run });
@@ -53,7 +55,7 @@ export class Game {
     this.state = 'playing'; $('#intro').classList.add('hidden'); $('#hud').classList.remove('hidden'); this.ui.hideOverlay();
     this.input.enabled = true; this.input.lock();
     // reset everything
-    this.player.reset(4.3, 10.9, 0); this.enemies.clear(); this.weapons.reset(); this.fx.reset(); this.bottles.reset(); this.waves.reset();
+    this.player.reset(4.3, 10.9, 0); this.enemies.clear(); this.weapons.reset(); this.fx.reset(); this.bottles.reset(); this.waves.reset(); this.props.reset();
     this.score = 0; this.combo = 1; this.comboT = 0; this.wave = 0; this.speed = 1; this.powerups = {}; this.slowEnemies = 1; this.player.speedMul = 1; this.shield = 0;
     this.stats = { kills: 0, shots: 0, hits: 0, whiffs: 0, bottles: 0, bestCombo: 1, time: 0 };
     this.flamingoHP = 180; this.world.flamingo.visible = true; this.world.flamingo.userData.taken = false; this.world.flamingo.position.set(-0.45, 3.9, 3.96); this.world.flamingo.rotation.set(0, -0.27, 0); this.flamingoFall = null;
@@ -73,6 +75,7 @@ export class Game {
     setTimeout(() => { this.ui.overlay(record ? 'record' : 'over'); this.input.unlock(); }, 1400);
   }
   debugCamera(x, y, z, yaw, pitch) { this.debugCam = { x, y, z, yaw, pitch }; }
+  get boss() { return this.enemies.list.find(e => e.alive && e.T.boss) || null; }
   debugInfo() { const r = this.R.r.info.render; return { calls: r.calls, tris: r.triangles, state: this.state, wave: this.wave, enemies: this.enemies.list.length, alive: this.enemies.alive.length, score: this.score, hp: Math.round(this.player.hp), pos: this.player.pos.toArray().map(v => +v.toFixed(2)), weapon: this.weapons.cur, drops: this.weapons.drops.length }; }
 
   // ------------------------------------------------------------- combat
@@ -112,6 +115,7 @@ export class Game {
     for (const e of this.enemies.list) { if (!e.alive) continue; const d = e.chest.distanceTo(p); if (d < radius + e.radius) { const f = 1 - Math.max(0, d - 0.5) / radius; const dir = e.chest.clone().sub(p).normalize(); dir.y = Math.max(dir.y, 0.3); this.hitEnemy(e, dmg * Math.max(0.25, f) * (owner === 'enemy' ? 0.5 : 1), dir, 18 * f, false, key, e.chest); } }
     const P = this.player; const d = P.eyePos.distanceTo(p); if (d < radius + 0.5) { const f = 1 - Math.max(0, d - 0.5) / radius; this.damagePlayer((owner === 'player' ? dmg * 0.25 : dmg * 0.6) * f, p); P.vel.add(P.pos.clone().setY(P.pos.y + 1).sub(p).normalize().multiplyScalar(6 * f)); P.vel.y += 3 * f; P.onGround = false; }
     for (const i of this.bottles.within(p, radius)) this.breakBottle(i, new THREE.Vector3(0, 1, 0));
+    this.props.blast(p, radius, 14);
     if (this.flamingoHP > 0 && this.world.flamingo.position.distanceTo(p) < radius + 1) this.hitFlamingo(dmg, this.world.flamingo.position);
   }
   breakBottle(i, dir) {
@@ -122,7 +126,7 @@ export class Game {
   hitFlamingo(dmg, point) {
     if (this.flamingoHP <= 0) return; this.flamingoHP -= dmg; this.fx.vaporHit(point, 0xffc0e0); this.audio.play('punch_hit', point);
     this.fx.text(point, 'COUIC', { color: '#ff4fa3', size: 14 });
-    if (this.flamingoHP <= 0) { this.ui.announce('LE FLAMANT EST LIBRE', 'Il tombe. Ramassez-le. Ne posez pas de questions.'); this.audio.play('scream', point); this.flamingoFall = { t: 0, v: new THREE.Vector3(1.5, 3, 2.5) }; }
+    if (this.flamingoHP <= 0) { this.ui.announce('LE FLAMANT EST LIBRE', 'Il tombe. Ramassez-le. Ne posez pas de questions.'); this.audio.play('scream', point); this.world.flamingo.userData.taken = true; this.flamingoFall = { t: 0, v: new THREE.Vector3(1.5, 3, 2.5) }; }
   }
 
   // ------------------------------------------------------------- power-ups
@@ -162,6 +166,7 @@ export class Game {
       this.player.update(dt, this.state === 'over' ? 0 : Math.pow(sp, 0.35));
       this.weapons.update(dt, sp);
       this.enemies.update(gdt, this.time);
+      this.props.update(gdt);
       if (this.state === 'playing') this.waves.update(gdt);
       this.comboT -= dt; if (this.comboT <= 0 && this.combo > 1) { this.combo = 1; }
       this.fx.update(gdt, this.R.camera);

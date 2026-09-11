@@ -17,6 +17,7 @@ export class World {
     this.lights = [];
     this.caches = [];
     this.bottleSpots = []; // for destructible bottle spawns
+    this.propSpecs = [];   // dynamic physics props (stools, jars)
     this.emissives = [];
     this.bounds = { x0: -8.3, x1: 8.3, z0: -12.6, z1: 12.6 };
     this.buildMaterials();
@@ -278,7 +279,7 @@ export class World {
     B.plane(M.signEasy, 1.4, 0.55, 5.9, 3.0, -12.3, { cast: false });
     B.plane(M.signZinzin, 1.6, 0.6, -0.3, 3.0, -12.3, { cast: false });
     // jars on the counter
-    for (let i = 0; i < 6; i++) { B.cyl(M.jar, 0.07, 0.065, 0.16, 2.6 + i * 0.17, 1.35, -9.5, { seg: 14 }); B.cyl(M.black, 0.072, 0.072, 0.02, 2.6 + i * 0.17, 1.44, -9.5, { seg: 14 }); for (let k = 0; k < 4; k++) B.sphere(M.gummy, 0.025, 2.6 + i * 0.17 + rnd(-0.03, 0.03), 1.3 + k * 0.03, -9.5 + rnd(-0.03, 0.03), { seg: 6 }); }
+    for (let i = 0; i < 6; i++) this.propSpecs.push({ kind: 'jar', x: 2.6 + i * 0.17, y: 1.27, z: -9.5 });
     this.flowers(6.98, 1.29, -9.13); this.flowers(-0.42, 1.3, -9.2);
     // shopping bags behind the counter
     for (let i = 0; i < 8; i++) B.box(M.cloth, 0.22, 0.32, 0.12, -7.55 + i * 0.3, 0.16, -11.0, { ry: rnd(-0.3, 0.3), tex: 0.4 });
@@ -395,13 +396,7 @@ export class World {
     for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) { const lx = -0.6 + c * 0.3, ly = 0.3 + r * 0.33; B.box([M.cardboard, M.black, M.pink, M.gummy][(r + c) % 4], 0.2, 0.26, 0.08, 4.83 + lx * Math.cos(-0.12) - 0.16 * Math.sin(-0.12), ly, -2.33 + lx * Math.sin(-0.12) + 0.16 * Math.cos(-0.12), { ry: -0.12, tex: 0 }); }
     this.collider(3.95, 5.7, -2.65, -2.0, 1.9);
   }
-  stool(x, z) {
-    const B = this.batch, M = this.M;
-    B.cyl(M.metalDark, 0.02, 0.02, 0.8, x, 0.4, z, { seg: 8 });
-    B.cyl(M.metalDark, 0.2, 0.2, 0.02, x, 0.02, z, { seg: 16 });
-    B.cyl(M.fabric, 0.18, 0.18, 0.06, x, 0.82, z, { seg: 16, tex: 0.5 });
-    B.box(M.fabric, 0.32, 0.36, 0.04, x, 1.12, z + (z > -0.45 ? 0 : 0), { tex: 0.5 });
-  }
+  stool(x, z) { this.propSpecs.push({ kind: 'stool', x, z }); }
   cabinet(x, z, w, h, d) {
     const B = this.batch, M = this.M;
     B.box(M.black, w, 0.12, d, x, 0.06, z, { tex: 0 }); B.box(M.black, w, 0.04, d, x, h - 0.02, z, { tex: 0 });
