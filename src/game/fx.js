@@ -151,7 +151,7 @@ export class FX {
     const g = this.points.geometry; g.attributes.position.needsUpdate = true; g.attributes.alpha.needsUpdate = true; g.attributes.size.needsUpdate = true; g.attributes.color.needsUpdate = true;
     this.pMat.uniforms.scale.value = window.innerHeight * 0.5;
     // puffs
-    for (let i = this.puffs.length - 1; i >= 0; i--) { const p = this.puffs[i]; p.life -= dt; const k = p.life / p.max; if (p.life <= 0) { p.s.visible = false; this.puffs.splice(i, 1); continue; } p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.exp(-dt * 1.5)); const sc = p.size * (1 + (1 - k) * p.grow); p.s.scale.setScalar(sc); p.s.material.opacity = p.op * Math.min(1, k * 3) * (k < 0.5 ? k * 2 : 1); p.s.material.rotation += p.rot * dt; }
+    for (let i = this.puffs.length - 1; i >= 0; i--) { const p = this.puffs[i]; p.life -= dt; const k = p.life / p.max; if (p.life <= 0) { p.s.visible = false; this.puffs.splice(i, 1); continue; } p.s.position.addScaledVector(p.v, dt); p.v.multiplyScalar(Math.exp(-dt * 1.5)); const sc = p.size * (1 + (1 - k) * p.grow); p.s.scale.setScalar(sc); const near = camera ? Math.min(1, p.s.position.distanceToSquared(camera.position) / 1.2) : 1; p.s.material.opacity = p.op * Math.min(1, k * 3) * (k < 0.5 ? k * 2 : 1) * near; p.s.material.rotation += p.rot * dt; }
     // tracers
     for (let i = this.tracers.length - 1; i >= 0; i--) { const t = this.tracers[i]; t.life -= dt; if (t.life <= 0) { t.m.visible = false; this.tracers.splice(i, 1); continue; } t.m.material.opacity = t.life / t.max; }
     // debris

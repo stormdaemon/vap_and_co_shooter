@@ -562,7 +562,7 @@ export class World {
     s.fog = new THREE.FogExp2(0x151a17, 0.012);
     const hemi = new THREE.HemisphereLight(0xe4ecff, 0x5a4a3a, 0.9); s.add(hemi);
     // daylight through the shopfront (+Z)
-    const sun = new THREE.DirectionalLight(0xfff1dc, 1.5); sun.position.set(6, 12, 30); sun.target.position.set(0, 0, 2); s.add(sun); s.add(sun.target);
+    const sun = new THREE.DirectionalLight(0xfff1dc, 1.25); sun.position.set(6, 12, 30); sun.target.position.set(0, 0, 2); s.add(sun); s.add(sun.target);
     sun.castShadow = true; sun.shadow.mapSize.set(q === 'low' ? 1024 : 2048, q === 'low' ? 1024 : 2048);
     const sc = sun.shadow.camera; sc.left = -12; sc.right = 12; sc.top = 16; sc.bottom = -16; sc.near = 5; sc.far = 60; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03; sun.shadow.radius = 2;
     this.sun = sun;

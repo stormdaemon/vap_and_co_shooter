@@ -191,7 +191,7 @@ export class Zinzin {
     if (!this.alive) return false;
     this.hp -= amount; const T = this.T;
     const kb = knock / Math.sqrt(T.weight); this.knock.addScaledVector(dir.clone().setY(0).normalize(), kb);
-    this.stagger = Math.max(this.stagger, T.boss ? 0.08 : Math.min(0.45, 0.12 + kb * 0.03)); this.hitFlash = 0.12;
+    this.stagger = Math.max(this.stagger, T.boss ? 0.08 : Math.min(0.45, 0.12 + kb * 0.03)); this.hitFlash = 0.09;
     if (this.type !== 'sprinter' && Math.random() < 0.5) this.grudgeCheck();
     if (this.hp <= 0) { this.die(dir, knock); return true; }
     return false;
@@ -243,7 +243,7 @@ export class Zinzin {
     }
     if (this.mount) { this.mount.position.y = -0.25 * s + Math.sin(this.phase * 2) * 0.08; this.mount.rotation.z = Math.sin(this.phase * 1.5) * 0.06; }
     // hit flash
-    if (this.hitFlash > 0) { this.hitFlash -= dt; const f = this.hitFlash > 0 ? 0.9 : 0; for (const k in this.mats) { this.mats[k].emissive.setRGB(f, f * 0.2, f * 0.3); this.mats[k].emissiveIntensity = 1; } }
+    if (this.hitFlash > 0) { this.hitFlash -= dt; const f = this.hitFlash > 0 ? 0.35 : 0; for (const k in this.mats) { this.mats[k].emissive.setRGB(f, f * 0.25, f * 0.3); this.mats[k].emissiveIntensity = 1; } }
     else if (this.wasFlash !== false) { for (const k in this.mats) this.mats[k].emissive.setRGB(0, 0, 0); this.wasFlash = false; }
     if (this.hitFlash > 0) this.wasFlash = true;
   }
