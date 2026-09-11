@@ -17,10 +17,10 @@ export const VM_MATS = {
   pink: std({ color: 0xff4fa3, roughness: 0.35, emissive: 0xff2a7f, emissiveIntensity: 0.2 }),
   pinkDark: std({ color: 0xc72c78, roughness: 0.4, emissive: 0xc72c78, emissiveIntensity: 0.12 }),
   plastic: std({ color: 0xff8ac5, roughness: 0.45, emissive: 0xff8ac5, emissiveIntensity: 0.12 }),
-  cyan: std({ color: 0x5ef2ff, emissive: 0x5ef2ff, emissiveIntensity: 0.9, roughness: 0.2 }),
-  orange: std({ color: 0xffb347, emissive: 0xff8a1f, emissiveIntensity: 0.9, roughness: 0.3 }),
-  lime: std({ color: 0xd7f06a, emissive: 0xd7f06a, emissiveIntensity: 0.8, roughness: 0.3 }),
-  violet: std({ color: 0xb58cff, emissive: 0x8a5cff, emissiveIntensity: 0.9, roughness: 0.3 }),
+  cyan: std({ color: 0x5ef2ff, emissive: 0x5ef2ff, emissiveIntensity: 0.3, roughness: 0.2 }),
+  orange: std({ color: 0xffb347, emissive: 0xff8a1f, emissiveIntensity: 0.35, roughness: 0.3 }),
+  lime: std({ color: 0xd7f06a, emissive: 0xd7f06a, emissiveIntensity: 0.3, roughness: 0.3 }),
+  violet: std({ color: 0xb58cff, emissive: 0x8a5cff, emissiveIntensity: 0.35, roughness: 0.3 }),
   white: std({ color: 0xf2f2f2, roughness: 0.4, emissive: 0xf2f2f2, emissiveIntensity: 0.1 }),
   glass: new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, depthWrite: false }),
   screen: std({ color: 0x0a1a20, emissive: 0x5ef2ff, emissiveIntensity: 0.5, roughness: 0.2 }),
@@ -232,7 +232,7 @@ export function buildBulles() {
 }
 
 export function buildFlamingoMelee(world) {
-  const g = new THREE.Group(); const f = world.makeFlamingo(0.22); f.position.set(0.1, -0.5, -0.45); f.rotation.set(0.25, 1.0, 0.35); g.add(f);
+  const g = new THREE.Group(); const f = world.makeFlamingo(0.16); f.position.set(0.16, -0.44, -0.46); f.rotation.set(0.25, 1.0, 0.35); g.add(f);
   const b = new Builder(); handGeometry(b, 1, 'grip', M(0.16, -0.16, -0.3, 0.9, 0.3, -1.2)); g.add(b.build());
   g.userData = { hip: [0.2, 0, -0.12], ads: [0.2, 0, -0.12], mesh: f }; return g;
 }

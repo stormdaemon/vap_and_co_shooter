@@ -96,7 +96,7 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 #bossbar .eyebrow{color:var(--pink);font-size:12px;text-shadow:0 0 12px var(--pink)}
 #bossbar .track{height:10px;border:1px solid #ff4fa366;background:#000a;margin-top:6px}
 #bossFill{height:100%;width:100%;background:linear-gradient(90deg,#ff4fa3,#ff8ac5);box-shadow:0 0 14px #ff4fa3;transition:width .15s}
-#powerups{position:absolute;left:50%;top:110px;transform:translateX(-50%);display:flex;gap:8px}
+#powerups{position:absolute;left:50%;top:148px;transform:translateX(-50%);display:flex;gap:8px}
 .pu{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;background:#000a;border:1px solid var(--line);position:relative;overflow:hidden}
 .pu i{position:absolute;left:0;bottom:0;height:2px;background:currentColor}
 

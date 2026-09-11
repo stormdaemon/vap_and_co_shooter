@@ -13,12 +13,17 @@ Site statique, sans build : ouvrez `index.html` via un serveur HTTP (Netlify, `p
   chromatique, et occlusion ambiante GTAO en qualité « Photoréaliste ».
 - **Fluidité** : physique joueur à pas fixe (120 Hz) avec interpolation caméra, capsule vs AABB, glissade,
   dash (double-tap), saut, accroupissement, head-bob, recul à ressort, sway de l'arme, résolution dynamique.
-- **Armes** : Poings, Vapo-Blaster (pistolet), Fumigène 3000 (fusil à dispersion), Mitrailleuse à Gummies
-  (projectiles qui rebondissent), Lance-Flamant (roquette à confettis) et **Le Flamant Rose** (mêlée lourde,
-  obtenu en abattant le flamant du kiosque ou le boss).
-- **Zinzins** : Client Pressé, Stagiaire Caféiné, Vapoteur Enragé (crache des nuages), Mamie CBD (tank),
-  Vigile Zinzin (tire), et **Le Patron Zinzin** (boss à bazooka qui chevauche le flamant, toutes les 5 vagues).
-  IA avec pathfinding A*, séparation, attaques télégraphiées, réactions aux coups, chutes ragdoll.
+- **Armes** (viewmodels détaillés avec vraies mains, culasse et pompe animées) : Poings, Vapo-Blaster, Fumigène 3000,
+  Mitrailleuse à Gummies (projectiles qui rebondissent), Lance-Flamant (roquette à confettis), **Rayon Botanique**
+  (faisceau continu qui surchauffe), **Canon à Bulles** (piège les zinzins dans une bulle, dégâts ×1,6),
+  **Gummy-Bombes** (grenades, touche G) et **Le Flamant Rose** (mêlée lourde, obtenu en abattant le flamant du kiosque ou le boss).
+- **Zinzins** (un seul draw call par ennemi : rig skinné + atlas de texture) : Client Pressé, Stagiaire Caféiné,
+  Vapoteur Enragé, Mamie CBD, Vigile Zinzin, **Livreur Turbo** (charges), **Influenceur** (soigne et accélère les autres),
+  **Vapoteur Explosif** (kamikaze) et **Le Patron Zinzin** (boss à bazooka sur flamant, toutes les 5 vagues, deux à partir de la 10).
+  IA avec pathfinding A* (y compris escalier et mezzanine), séparation, attaques télégraphiées, réactions aux coups, chutes ragdoll.
+- **Progression** : modificateurs de vague aléatoires (Turbo, Panne de courant + lampe torche, Happy Hour, Fiesta,
+  Pluie de power-ups, Zinzins costauds, Soirée explosive), **ultime « Tempête de Vapeur »** (X) chargé par les éliminations,
+  **Boutique du Patron** à la caisse entre les vagues (vitalité, rechargement, dash, dégâts, seconde chance…).
 - **Folie** : vagues infinies, combos et multiplicateurs, annonces (« DOUBLE ZINZIN », « CARNAGE AU COMPTOIR »…),
   power-ups (Menthe Glaciale = ralenti, Booster Nicotine, Bouclier Vitrine, Disco CBD, Méga-Gummies, Tisane CBD),
   bouteilles destructibles (centaines de flacons instanciés), tabourets et bocaux physiques qui assomment les
@@ -34,8 +39,9 @@ Site statique, sans build : ouvrez `index.html` via un serveur HTTP (Netlify, `p
 | Dash | double-tap d'une direction |
 | Tirer / viser / recharger | clic gauche / clic droit / R |
 | Coup de poing | E (même avec une arme) |
-| Ramasser | F |
-| Changer d'arme | 1-5 ou molette |
+| Ramasser / boutique | F |
+| Grenade / ultime / lampe | G / X / L |
+| Changer d'arme | 1-7 ou molette |
 | Pause | Échap |
 
 ## Structure
