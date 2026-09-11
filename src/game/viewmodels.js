@@ -231,6 +231,22 @@ export function buildBulles() {
   g.userData = { muzzle: mz, hip: [0.24, -0.2, -0.42], ads: [0, -0.1, -0.3] }; return g;
 }
 
+export function buildSeche() {
+  const b = new Builder(), Mt = VM_MATS; const g = new THREE.Group();
+  // salon hair dryer 9000: pink body, chrome nozzle ring, heat coils, big fan intake, cord
+  b.cyl(Mt.plastic, 0.055, 0.07, 0.24, 0, 0.02, -0.12, Math.PI / 2, 0, 0, 20);
+  b.cyl(Mt.pinkDark, 0.072, 0.072, 0.03, 0, 0.02, -0.26, Math.PI / 2, 0, 0, 20); b.cyl(Mt.steel, 0.06, 0.06, 0.02, 0, 0.02, -0.28, Math.PI / 2, 0, 0, 20);
+  for (let i = 0; i < 3; i++) b.torus(Mt.orange, 0.02 + i * 0.013, 0.004, 0, 0.02, -0.27, 0, 0, 0);
+  b.cyl(Mt.pinkDark, 0.075, 0.075, 0.04, 0, 0.02, 0.02, Math.PI / 2, 0, 0, 20); for (let a = 0; a < 8; a++) b.box(Mt.dark, 0.05, 0.006, 0.02, Math.cos(a * 0.785) * 0.03, 0.02 + Math.sin(a * 0.785) * 0.03, 0.045, 0, 0, a * 0.785);
+  b.box(Mt.plastic, 0.05, 0.14, 0.06, 0, -0.08, -0.06, 0.25, 0, 0, 0.012); b.box(Mt.dark, 0.02, 0.03, 0.02, 0.026, -0.05, -0.06); // switch
+  b.box(Mt.white, 0.03, 0.012, 0.05, 0, 0.078, -0.1); b.box(Mt.screen, 0.026, 0.002, 0.04, 0, 0.085, -0.1);
+  for (let i = 0; i < 6; i++) b.cyl(Mt.rubber, 0.006, 0.006, 0.06, 0.01 * Math.sin(i), -0.16 - i * 0.05, -0.02 + Math.cos(i) * 0.02, 0.4, 0, 0, 6);
+  handGeometry(b, 1, 'grip', M(-0.004, -0.085, -0.055, 0.25, 0, -Math.PI / 2 + 0.1));
+  const body = b.build(); g.add(body);
+  const mz = new THREE.Object3D(); mz.position.set(0, 0.02, -0.3); g.add(mz);
+  g.userData = { muzzle: mz, hip: [0.24, -0.2, -0.42], ads: [0.05, -0.12, -0.32] }; return g;
+}
+
 export function buildFlamingoMelee(world) {
   const g = new THREE.Group(); const f = world.makeFlamingo(0.16); f.position.set(0.16, -0.44, -0.46); f.rotation.set(0.25, 1.0, 0.35); g.add(f);
   const b = new Builder(); handGeometry(b, 1, 'grip', M(0.16, -0.16, -0.3, 0.9, 0.3, -1.2)); g.add(b.build());

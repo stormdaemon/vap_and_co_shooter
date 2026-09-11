@@ -12,12 +12,15 @@ export class UI {
       wname: $('#weaponName'), wdesc: $('#weaponDesc'), mag: $('#ammoMag'), res: $('#ammoRes'), reload: $('#reloadFill'), slots: $('#wslots'), wcard: $('#weaponcard'), gren: $('#grenades'),
       prompt: $('#prompt'), promptKey: $('#promptKey'), promptName: $('#promptName'), promptSub: $('#promptSub'), toast: $('#toast'), announce: $('#announce'), aMain: $('#announceMain'), aSub: $('#announceSub'),
       vign: $('#dmgVignette'), bossbar: $('#bossbar'), bossFill: $('#bossFill'), dir: $('#dmgDir'), lowhp: $('#lowhp'), fps: $('#fps'), cross: $('#crosshair'), hit: $('#hitmarker'), pus: $('#powerups'), minimap: $('#minimap'),
-      shop: $('#shop'), shopItems: $('#shopItems'), shopScore: $('#shopScore'),
+      shop: $('#shop'), shopItems: $('#shopItems'), shopScore: $('#shopScore'), bladder: $('#bladderFill'), transit: $('#transitFill'), gaugeLbl: $('#gaugeLbl'), event: $('#eventBadge'), notifs: $('#notifs'),
     };
     this.toastT = 0; this.announceT = 0; this.vign = 0; this.dirT = 0; this.hitT = 0; this.tick = 0; this.fpsAcc = 0; this.fpsN = 0; this.showFps = false;
     this.mm = this.el.minimap.getContext('2d');
   }
   setWaveState(t) { this.el.waveState.textContent = t; }
+  setEvent(ev) { const e = this.el.event; if (!ev) { e.classList.add('hidden'); return; } e.classList.remove('hidden'); e.textContent = ev.name; e.style.color = ev.color; e.style.borderColor = ev.color; }
+  notif(text) { const d = document.createElement('div'); d.className = 'notif'; d.innerHTML = `<span class="ndot"></span>${text}`; this.el.notifs.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 5500); while (this.el.notifs.children.length > 4) this.el.notifs.firstChild.remove(); }
+  clearNotifs() { this.el.notifs.innerHTML = ''; }
   setMod(mod) { const e = this.el.mod; if (!mod) { e.classList.add('hidden'); return; } e.classList.remove('hidden'); e.textContent = mod.name; e.style.color = mod.color; e.style.borderColor = mod.color; }
   announce(main, sub = '') { this.el.aMain.textContent = main; this.el.aSub.textContent = sub; this.el.announce.classList.remove('on'); void this.el.announce.offsetWidth; this.el.announce.classList.add('on'); this.announceT = 2.6; }
   toast(msg, dur = 3) { this.el.toast.textContent = msg; this.el.toast.classList.add('on'); this.toastT = dur; }
@@ -32,7 +35,7 @@ export class UI {
     const W = this.g.weapons; if (!W) return; const D = W.def, a = W.ammo; const e = this.el;
     e.wname.textContent = D.name; e.wdesc.textContent = D.desc;
     if (D.melee) { e.mag.textContent = '∞'; e.res.textContent = D.key === 'flamingo' ? 'Balayage large · E = poing' : 'E ou clic gauche'; e.wcard.classList.remove('lowammo'); }
-    else if (D.beam) { e.mag.textContent = `${Math.round(a.mag)}%`; e.res.textContent = W.overheat > 0 ? 'SURCHAUFFE' : 'énergie'; e.wcard.classList.toggle('lowammo', a.mag < 25 || W.overheat > 0); }
+    else if (D.beam || D.wind) { e.mag.textContent = `${Math.round(a.mag)}%`; e.res.textContent = W.overheat > 0 ? 'SURCHAUFFE' : D.wind ? 'air chaud' : 'énergie'; e.wcard.classList.toggle('lowammo', a.mag < 25 || W.overheat > 0); }
     else { e.mag.textContent = a.mag; e.res.textContent = W.infinite ? '∞ · BOOST' : `/ ${a.reserve}`; e.wcard.classList.toggle('lowammo', a.mag <= Math.ceil(D.mag * 0.25)); }
     let h = ''; for (let i = 0; i < SLOT_COUNT; i++) { const k = W.slots[i]; const has = k && W.has(k); h += `<span class="${has ? 'has' : ''} ${k === W.cur ? 'cur' : ''}" title="${k ? WEAPONS[k].name : ''}">${i + 1}</span>`; } e.slots.innerHTML = h;
     e.gren.textContent = `G · ${W.grenades} bombe${W.grenades > 1 ? 's' : ''}`; e.gren.classList.toggle('empty', W.grenades <= 0);
@@ -44,15 +47,17 @@ export class UI {
     if (this.toastT > 0) { this.toastT -= dt; if (this.toastT <= 0) e.toast.classList.remove('on'); }
     if (this.announceT > 0) { this.announceT -= dt; if (this.announceT <= 0) e.announce.classList.remove('on'); }
     e.cross.classList.toggle('ads', P.ads > 0.5); e.cross.style.setProperty('--gap', `${6 + Math.min(14, P.moving * 1.5 + (P.onGround ? 0 : 8)) * (1 - P.ads * 0.7)}px`);
-    const W = g.weapons; if (W.reloading > 0) e.reload.style.width = `${(1 - W.reloading / W.reloadTotal) * 100}%`; else if (W.def.beam) e.reload.style.width = `${W.ammo.mag}%`; else e.reload.style.width = '0';
+    const W = g.weapons; if (W.reloading > 0) e.reload.style.width = `${(1 - W.reloading / W.reloadTotal) * 100}%`; else if (W.def.beam || W.def.wind) e.reload.style.width = `${W.ammo.mag}%`; else e.reload.style.width = '0';
     const nd = W.nearDrop;
     if (nd) { e.prompt.classList.remove('hidden'); e.promptKey.textContent = 'F'; e.promptName.textContent = `Ramasser : ${nd.label}`; e.promptSub.textContent = nd.key === 'flamingo' ? 'Arme de mêlée légendaire' : nd.key === 'grenade' ? '+2 Gummy-Bombes' : (W.inv[nd.key] ? 'Ajoute des munitions' : 'Nouvelle arme'); }
+    else if (g.folie.nearToilet() && g.folie.sitting <= 0) { e.prompt.classList.remove('hidden'); e.promptKey.textContent = 'F'; e.promptName.textContent = 'WC Équipe'; e.promptSub.textContent = 'S\'asseoir 3 s : vitalité, vessie et transit'; }
     else if (g.nearShop()) { e.prompt.classList.remove('hidden'); e.promptKey.textContent = 'F'; e.promptName.textContent = 'Boutique du Patron'; e.promptSub.textContent = 'Dépensez vos points en améliorations'; }
     else e.prompt.classList.add('hidden');
     this.fpsAcc += dt; this.fpsN++;
     if (this.tick < 0.1) return; this.tick = 0;
     e.hp.textContent = Math.ceil(P.hp); e.hpMax.textContent = `/ ${P.maxHp}`; e.hpFill.style.width = `${P.hp / P.maxHp * 100}%`; e.healthcard.classList.toggle('crit', P.hp < 30); e.lowhp.classList.toggle('on', P.hp < 30 && !P.dead);
     e.stamFill.style.width = `${P.stamina * 100}%`; e.stamLabel.textContent = P.stamina >= 0.99 ? 'DASH PRÊT' : 'RECHARGE…';
+    e.bladder.style.width = `${g.folie.bladder}%`; e.transit.style.width = `${g.folie.transit}%`; e.gaugeLbl.textContent = g.folie.bladder > 85 ? 'VESSIE : ENVIE PRESSANTE (P)' : `VESSIE ${Math.round(g.folie.bladder)}% · TRANSIT ${Math.round(g.folie.transit)}% (P / O)`;
     e.ultFill.style.width = `${g.ult * 100}%`; e.ultLabel.textContent = g.ult >= 1 ? 'X · TEMPÊTE PRÊTE' : `ULTIME ${Math.round(g.ult * 100)}%`; e.ultFill.parentElement.classList.toggle('ready', g.ult >= 1);
     e.wave.textContent = g.wave; e.score.textContent = g.score.toLocaleString('fr-FR');
     e.combo.textContent = `×${g.combo}`; e.combo.classList.toggle('hot', g.combo >= 5); e.comboLabel.textContent = g.combo >= 2 ? this.comboName(g.combo) : '';

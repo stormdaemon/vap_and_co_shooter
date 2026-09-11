@@ -28,6 +28,17 @@ Site statique, sans build : ouvrez `index.html` via un serveur HTTP (Netlify, `p
   power-ups (Menthe Glaciale = ralenti, Booster Nicotine, Bouclier Vitrine, Disco CBD, Méga-Gummies, Tisane CBD),
   bouteilles destructibles (centaines de flacons instanciés), tabourets et bocaux physiques qui assomment les
   zinzins, confettis, taunts, musique synthwave et effets sonores 100 % procéduraux (WebAudio).
+- **Complètement barge** : jauges **Vessie** et **Transit**. Faire **pipi** (P maintenu) laisse des flaques sur
+  lesquelles les zinzins glissent ; faire **caca** (O) pose une mine à petit drapeau qui colle les zinzins au sol
+  (et rapporte ×3 points). Les **WC équipe** (F devant la porte) vident tout et soignent. **Crier** (T) fait fuir
+  les zinzins, qui font caca de peur. **Roger le pigeon** rejoint parfois la partie et fiente sur les zinzins.
+  Nouveaux zinzins : **Touriste** (selfies aveuglants) et **Mime** (invisible, se glisse dans votre dos).
+  Nouvelle arme : **Sèche-Cheveux 9000** (souffle tout dans le décor et sèche les flaques).
+  **Événements aléatoires** : Lune (gravité), Grosses Têtes, Minis, Géants, Pluie de Gummies, Macarena obligatoire,
+  Tonneau (le magasin fait une roulade), Le Flamant Parle, Liquidation totale, Fientes.
+  Un **annonceur vocal** (synthèse vocale, désactivable en pause) commente, et des **pastilles de notification**
+  livrent des phrases sans aucun sens. Boutique enrichie (Couche absorbante, Ami pigeon, Régénération, Autocollant).
+- **Plus casual** : régénération de vie permanente (accélérée après quelques secondes sans dégâts).
 
 ## Commandes
 
@@ -41,7 +52,9 @@ Site statique, sans build : ouvrez `index.html` via un serveur HTTP (Netlify, `p
 | Coup de poing | E (même avec une arme) |
 | Ramasser / boutique | F |
 | Grenade / ultime / lampe | G / X / L |
-| Changer d'arme | 1-7 ou molette |
+| Changer d'arme | 1-8 ou molette |
+| Pipi (maintenir) / caca / crier | P / O / T |
+| WC équipe | F devant la porte « STAFF » |
 | Pause | Échap |
 
 ## Structure

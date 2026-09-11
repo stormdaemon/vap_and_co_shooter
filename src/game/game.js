@@ -7,6 +7,8 @@ import { Enemies } from './enemies.js';
 import { Waves } from './waves.js';
 import { UI } from './ui.js';
 import { Props } from './props.js';
+import { Folie } from './folie.js';
+import { Announcer } from './tts.js';
 
 const $ = s => document.querySelector(s);
 const PU = {
@@ -23,7 +25,12 @@ export const SHOP = [
   { key: 'dmg', name: 'Sauce piquante', desc: 'Dégâts +12 % (cumulable)', cost: 1100, max: 4 },
   { key: 'ult', name: 'Ultime chargé', desc: 'Tempête de Vapeur prête (X)', cost: 600, max: 99 },
   { key: 'life', name: 'Seconde chance', desc: 'Revient à 50 % de vie une fois', cost: 2500, max: 1 },
+  { key: 'couche', name: 'Couche-culotte', desc: 'Pipi illimité, vessie ×3. Personne ne juge.', cost: 650, max: 1 },
+  { key: 'pigeon', name: 'Pigeon dressé', desc: 'Roger fiente deux fois plus souvent', cost: 500, max: 1 },
+  { key: 'regen', name: 'Tisane en perfusion', desc: 'Régénération +2 PV/s (cumulable)', cost: 700, max: 3 },
+  { key: 'autocollant', name: 'Autocollant « Ne vapotez pas »', desc: 'Ne fait absolument rien.', cost: 1, max: 99 },
 ];
+export const NONSENSE = ['Info magasin : le flamant a été vu en train de payer en billets de Monopoly.', 'Rappel : les zinzins ne sont pas comestibles. Même les gummies.', 'Le stagiaire a rangé les 50 ml par ordre de tristesse.', 'Un client demande si le CBD marche sur les pigeons. Réponse : Roger dit oui.', 'Météo intérieure : nuageux avec risque de fraise.', 'La caisse enregistreuse a demandé une augmentation.', 'Quelqu\'un a laissé un tabouret dans le tabouret.', 'Le patron rappelle que les pauses pipi sont facturées 0 point.', 'Promo : 1 zinzin acheté, 1 zinzin offert. Non remboursable.', 'La mezzanine est fière de vous. Ne montez pas dessus, elle rougit.', 'Attention : sol glissant. Personne ne sait pourquoi.', 'Le Mime a essayé de dire quelque chose. Il a échoué.', 'Le vigile a perdu sa casquette dans un combat contre une porte.', 'Nouveau parfum en rayon : « Odeur de victoire », 3 mg.', 'Le pigeon Roger a été élu employé du mois.', 'Il est interdit de vapoter à la caisse. Il est autorisé d\'y crier.', 'Un flacon vient de se casser tout seul. Il n\'en pouvait plus.', 'Les tabourets ont voté : ils partent en grève à la vague 7.', 'Le Livreur Turbo a livré un colis vide. Il était très fier.', 'Rappel sécurité : ne pas essuyer la vitrine avec un zinzin.', 'Un Influenceur a essayé de liker une bouteille. Elle a explosé de joie.', 'Le magasin vous remercie. Il ne sait pas pourquoi non plus.', 'La musique change de rythme quand personne ne regarde.', 'Roger demande des miettes. Roger n\'aura pas de miettes.'];
 const SHOP_POS = new THREE.Vector3(1.1, 0, -8.1);
 
 export class Game {
@@ -42,6 +49,7 @@ export class Game {
     this.enemies = new Enemies(this);
     this.waves = new Waves(this);
     this.props = new Props(this);
+    this.tts = new Announcer(); this.folie = new Folie(this); this.notifT = 8; this.macarena = 0;
     this.R.scene.add(this.R.camera);
     // flashlight
     this.flash = new THREE.SpotLight(0xfff4e0, 0, 18, 0.5, 0.45, 1.2); this.flash.position.set(0.15, -0.1, 0); this.flash.target.position.set(0, 0, -5); this.R.camera.add(this.flash); this.R.camera.add(this.flash.target); this.flashOn = false;
@@ -55,7 +63,7 @@ export class Game {
     document.querySelectorAll('#difficulty button').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('#difficulty button').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); this.difficulty = +b.dataset.diff; }));
     document.querySelectorAll('#quality button').forEach(b => b.addEventListener('click', () => { localStorage.setItem('vc_quality', b.dataset.q); location.search = '?q=' + b.dataset.q; }));
     $('#btnResume').addEventListener('click', () => this.resume()); $('#btnRestart').addEventListener('click', () => this.start()); $('#btnMenu').addEventListener('click', () => this.showMenu());
-    $('#chkMusic').addEventListener('change', e => this.audio.setMusic(e.target.checked)); $('#chkShake').addEventListener('change', e => this.shakeOn = e.target.checked); $('#chkFps').addEventListener('change', e => this.ui.showFps = e.target.checked);
+    $('#chkMusic').addEventListener('change', e => this.audio.setMusic(e.target.checked)); $('#chkVoice').addEventListener('change', e => { this.tts.enabled = e.target.checked; if (!e.target.checked) this.tts.stop(); }); $('#chkShake').addEventListener('change', e => this.shakeOn = e.target.checked); $('#chkFps').addEventListener('change', e => this.ui.showFps = e.target.checked);
     $('#rngSens').addEventListener('input', e => this.input.sens = +e.target.value); $('#rngFov').addEventListener('input', e => { this.player.fovBase = +e.target.value; });
     $('#btnShopClose').addEventListener('click', () => this.closeShop());
     this.input.onLockChange = (locked) => { if (!locked && this.state === 'playing') this.pause(); };
@@ -69,7 +77,7 @@ export class Game {
     this.hs = +(localStorage.getItem('vc_highscore') || 0); this.updateHighscore();
   }
   updateHighscore() { const hw = +(localStorage.getItem('vc_highwave') || 0); $('#highscore').innerHTML = this.hs ? `MEILLEUR SCORE<b>${this.hs.toLocaleString('fr-FR')}</b>vague ${hw}` : ''; }
-  showMenu() { this.state = 'menu'; $('#intro').classList.remove('hidden'); $('#hud').classList.add('hidden'); this.ui.hideOverlay(); this.ui.hideShop(); this.input.enabled = false; this.input.unlock(); this.audio.stopMusic(); this.weapons.vm.visible = false; this.setWaveMod(null); }
+  showMenu() { this.tts.stop(); this.state = 'menu'; $('#intro').classList.remove('hidden'); $('#hud').classList.add('hidden'); this.ui.hideOverlay(); this.ui.hideShop(); this.input.enabled = false; this.input.unlock(); this.audio.stopMusic(); this.weapons.vm.visible = false; this.setWaveMod(null); }
   start() {
     this.audio.ensure(); this.audio.startMusic();
     this.state = 'playing'; $('#intro').classList.add('hidden'); $('#hud').classList.remove('hidden'); this.ui.hideOverlay(); this.ui.hideShop();
@@ -78,16 +86,17 @@ export class Game {
     this.score = 0; this.combo = 1; this.comboT = 0; this.wave = 0; this.speed = 1; this.powerups = {}; this.slowEnemies = 1; this.player.speedMul = 1; this.shield = 0; this.ult = 0; this.upgrades = {}; this.extraLife = false; this.setWaveMod(null); this.flashOn = false; this.flash.intensity = 0;
     this.stats = { kills: 0, shots: 0, hits: 0, whiffs: 0, bottles: 0, bestCombo: 1, time: 0 };
     this.flamingoHP = 180; this.world.flamingo.visible = true; this.world.flamingo.userData.taken = false; this.world.flamingo.position.set(-0.45, 3.9, 3.96); this.world.flamingo.rotation.set(0, -0.27, 0); this.flamingoFall = null;
-    this.weapons.vm.visible = true;
+    this.weapons.vm.visible = true; this.folie.reset(); this.notifT = 8; this.macarena = 0; this.player.gravity = 16; this.player.jumpV = 5.6; this.player.extraRoll = 0; this.ui.clearNotifs();
     this.weapons.drop('vapo', new THREE.Vector3(6.55, 0, 10.45));
     this.weapons.drop('vapo', new THREE.Vector3(-6.12, 0, 10.05), 0.6, 'MUNITIONS VAPO');
     this.waves.start();
-    this.ui.announce('ZINZIN MAYHEM', 'Survivez. Cognez. Ne vapotez pas à la caisse.');
+    this.ui.announce('ZINZIN MAYHEM', 'Survivez. Cognez. Ne vapotez pas à la caisse.'); this.tts.say('Bienvenue chez Vap and Co. Ne vapotez pas à la caisse.', { priority: 2 });
     this.ui.refreshWeapon(true);
   }
   pause() { if (this.state !== 'playing') return; this.state = 'paused'; this.ui.overlay('pause'); this.input.unlock(); this.weapons.stopBeam(); }
   resume() { if (this.state !== 'paused') return; this.state = 'playing'; this.ui.hideOverlay(); this.input.lock(); }
   gameOver() {
+    this.tts.say('Hors combat. Le magasin est tombé.', { priority: 2 });
     if (this.extraLife) { this.extraLife = false; this.player.dead = false; this.player.hp = this.player.maxHp * 0.5; this.player.lastHurt = this.player.time; this.shield = 80; this.ui.announce('SECONDE CHANCE', 'Le patron vous rembourse. Une seule fois.'); this.audio.play('powerup'); this.useUltEffect(true); return; }
     this.state = 'over'; this.audio.play('gameover'); this.audio.setIntensity(0); this.weapons.stopBeam();
     const record = this.score > this.hs; if (record) { this.hs = this.score; localStorage.setItem('vc_highscore', this.score); localStorage.setItem('vc_highwave', this.wave); this.updateHighscore(); }
@@ -98,17 +107,18 @@ export class Game {
   warmup() {
     const R = this.R, fx = this.fx, W = this.weapons; const scene = R.scene;
     // two hidden reference zinzins: one opaque, one transparent (death fade) so both skinned shader variants stay resident
-    const dummy = this.enemies.spawn('client', 0, 6); dummy.trap(0.01); const dummy2 = this.enemies.spawn('mamie', 1, 6); dummy2.mat.transparent = true; dummy2.mat.opacity = 0.5; this.enemies.list.length = 0; this.dummies = [dummy, dummy2];
+    const dummy = this.enemies.spawn('client', 0, 6); dummy.trap(0.01); const dummy2 = this.enemies.spawn('mime', 1, 6); this.enemies.list.length = 0; this.dummies = [dummy, dummy2];
     const pools = [...fx.puffPool, ...fx.tracerPool, ...fx.decalPool, ...fx.ringPool]; for (const o of pools) o.visible = true; fx.points.visible = true; fx.debris.visible = true;
     for (const k in W.models) W.models[k].visible = true; W.grenadeVm.visible = true;
     const o = new THREE.Vector3(0, 1.5, 6), d = new THREE.Vector3(0, 0, -1);
-    for (const k of ['gummy', 'bulles', 'grenade', 'flamant']) W.spawnProjectile(o, d, WEAPONS[k], 'player');
+    for (const k of ['gummy', 'bulles', 'grenade', 'flamant']) W.spawnProjectile(o, d, WEAPONS[k], 'player'); W.spawnProjectile(o, d, { key: 'pluie', damage: 1, knock: 0, projectile: { speed: 0, gravity: 0, radius: 0.09, life: 1 } }, 'player');
+    const F = this.folie; F.spawnCaca(new THREE.Vector3(0.5, 0, 6)); F.addPuddle(new THREE.Vector3(-0.5, 0, 6), 1); F.spawnFiente(new THREE.Vector3(0, 2, 6)); F.pigeon.mesh.visible = true; F.pigeon.mesh.position.set(0, 2.5, 6);
     const drops = [W.drop('vapo', new THREE.Vector3(1, 0, 6)), W.dropPowerup('heal', new THREE.Vector3(-1, 0, 6))];
     R.camera.position.set(0, 1.7, 9); R.camera.lookAt(0, 1, 0); R.camera.updateMatrixWorld(true);
     R.precompile(); R.render(0); R.render(0.02);
     for (const o of pools) o.visible = false; for (const k in W.models) W.models[k].visible = false; W.grenadeVm.visible = false;
     for (const p of W.projectiles) scene.remove(p.mesh); W.projectiles.length = 0; for (const dr of drops) scene.remove(dr.g); W.drops.length = 0;
-    for (const d of this.dummies) { d.mesh.visible = false; d.alive = false; d.hp = 0; } fx.reset();
+    for (const d of this.dummies) { d.mesh.visible = false; d.alive = false; d.hp = 0; } fx.reset(); F.pigeon.mesh.visible = false; for (const c of F.cacas) scene.remove(c.m); F.cacas.length = 0; for (const q of F.puddles) scene.remove(q.m); F.puddles.length = 0; for (const f of F.fientes) scene.remove(f.m); F.fientes.length = 0;
     W.setCurrent('fists', true);
   }
   debugCamera(x, y, z, yaw, pitch) { this.debugCam = { x, y, z, yaw, pitch }; }
@@ -125,7 +135,7 @@ export class Game {
     W.sun.intensity = blackout ? 0.08 : 1.25; W.ambient.intensity = blackout ? 0.08 : 0.9;
     for (const l of W.lights) { if (l.isSpotLight) l.intensity = blackout ? 0 : 34; else if (l.userData.base === undefined) { l.userData.base = l.intensity; } if (!l.isSpotLight) l.intensity = blackout ? l.userData.base * 0.35 : l.userData.base; }
     this.R.scene.environmentIntensity = blackout ? 0.06 : 0.5;
-    this.ui.setMod(mod);
+    this.ui.setMod(mod); if (mod) this.tts.say(mod.name.toLowerCase() + '. ' + mod.desc, { priority: 1 });
   }
   onIntermission(on) { this.intermission = on; }
   // ------------------------------------------------------------- shop
@@ -142,6 +152,9 @@ export class Game {
     if (key === 'ammo') { this.weapons.refillAll(); this.upgrades.ammo = 0; }
     if (key === 'ult') { this.ult = 1; this.upgrades.ult = 0; }
     if (key === 'life') this.extraLife = true;
+    if (key === 'regen') this.player.regenRate = 3 + 2 * this.upgrades.regen;
+    if (key === 'autocollant') { this.ui.toast('Merci pour votre achat. Il ne fait rien.', 3); this.tts.say('Merci pour votre achat', { priority: 0 }); }
+    if (key === 'pigeon') this.folie.pigeon.activate();
     this.ui.toast(`${it.name} acheté`); this.ui.refreshShop(); this.ui.refreshWeapon(true);
   }
   get reloadMul() { return Math.pow(0.8, this.upgrades.reload || 0); }
@@ -168,27 +181,33 @@ export class Game {
     this.fx.vaporHit(pt, e.T.boss ? 0xffc0e0 : 0xe8f4ff); this.fx.burst(pt, 5, { speed: 2.5, color: [[1, 0.5, 0.7], [0.9, 0.95, 1]], life: 0.4, size: 0.04, grav: 5 });
     this.fx.text(pt.clone().setY(pt.y + 0.3), `${Math.round(dmg)}${head ? ' !' : ''}`, { color: head ? '#ffb347' : '#fff', size: head ? 22 : 16, glow: head ? '#ff4fa3' : '#5ef2ff' });
     this.audio.play(head ? 'headshot' : 'hit'); this.ui.hitmarker(killed);
-    if (weapon !== 'zinzin' && weapon !== 'prop' && weapon !== 'ult') this.player.kickVel.x += (Math.random() - 0.5) * 2;
+    if (!['zinzin', 'prop', 'ult', 'caca', 'fiente', 'bottle', 'seche', 'pluie'].includes(weapon)) this.player.kickVel.x += (Math.random() - 0.5) * 2;
+    if (head && this.folie.event?.key === 'tetes') { /* big heads: extra pop */ this.fx.text(pt.clone().setY(pt.y + 0.6), 'GROSSE TÊTE', { color: '#ffb347', size: 14 }); }
     if (killed) this.onKill(e, weapon, head, knock);
   }
   onKill(e, weapon, head, knock) {
-    this.stats.kills++; this.waves.onKill(); this.audio.play('kill');
-    this.combo = this.comboT > 0 ? this.combo + 1 : 1; this.comboT = 3.2; this.stats.bestCombo = Math.max(this.stats.bestCombo, this.combo);
-    const mult = Math.min(10, 1 + (this.combo - 1) * 0.5); const pts = Math.round(e.T.score * mult * (head ? 1.5 : 1) * (weapon === 'fists' ? 2 : 1) * this.scoreMul);
+    this.stats.kills++; this.waves.onKill(); this.audio.play('kill'); this.folie.onKill(e);
+    this.combo = this.comboT > 0 ? this.combo + 1 : 1; this.comboT = 3.2; this.stats.bestCombo = Math.max(this.stats.bestCombo, this.combo); const name = this.ui.comboName(this.combo);
+    const mult = Math.min(10, 1 + (this.combo - 1) * 0.5); const pts = Math.round(e.T.score * mult * (head ? 1.5 : 1) * (weapon === 'fists' ? 2 : 1) * (weapon === 'caca' || weapon === 'fiente' ? 3 : 1) * this.scoreMul);
     this.score += pts; $('#combo').classList.add('pop'); setTimeout(() => $('#combo').classList.remove('pop'), 120); this.audio.play('combo', null, { n: this.combo });
     this.addUlt(e.T.boss ? 0.5 : head ? 0.09 : 0.055);
     this.fx.text(e.headPos, `+${pts}`, { color: '#d7f06a', size: 18 + Math.min(14, this.combo), glow: '#d7f06a', rise: 1.4, life: 1.3 });
-    const name = this.ui.comboName(this.combo); if (name && [2, 3, 5, 8, 12, 16, 24].includes(this.combo)) this.ui.announce(name, `combo ×${this.combo} · ${weapon === 'fists' ? 'À MAINS NUES !' : head ? 'DANS LA TÊTE' : 'continuez !'}`);
+    if (name && [2, 3, 5, 8, 12, 16, 24].includes(this.combo)) this.ui.announce(name, `combo ×${this.combo} · ${weapon === 'fists' ? 'À MAINS NUES !' : head ? 'DANS LA TÊTE' : 'continuez !'}`);
     if (weapon === 'fists') this.fx.text(e.headPos.clone().setY(e.headPos.y + 0.4), 'BAFFE !', { color: '#ffb347', size: 22 });
     if (weapon === 'flamingo') this.fx.confettiRain(e.pos, 20);
     if (weapon === 'prop') this.fx.text(e.headPos.clone().setY(e.headPos.y + 0.4), 'MOBILIER !', { color: '#ffb347', size: 18 });
+    if (weapon === 'caca') { this.fx.text(e.headPos.clone().setY(e.headPos.y + 0.4), 'MORT DE HONTE', { color: '#8a6a3a', size: 18 }); this.tts.say('Éliminé par un caca', { priority: 0 }); }
+    if (weapon === 'fiente') { this.fx.text(e.headPos.clone().setY(e.headPos.y + 0.4), 'BRAVO ROGER', { color: '#eee', size: 18 }); }
+    if (weapon === 'seche') this.fx.text(e.headPos.clone().setY(e.headPos.y + 0.4), 'SÉCHÉ', { color: '#ff8ac5', size: 18 });
+    if (name && [3, 5, 8, 12].includes(this.combo)) this.tts.say(name.toLowerCase(), { priority: 1 });
     if (e.T.boss) { this.ui.announce('PATRON NEUTRALISÉ', 'Le flamant est à vous. Les zinzins pleurent.'); this.fx.explosion(e.chest, { radius: 3, color: 0xff4fa3, confetti: true }); this.audio.play('explosion', e.pos); this.weapons.drop('flamingo', e.pos.clone()); this.weapons.dropPowerup('shield', e.pos.clone().add(new THREE.Vector3(1, 0, 0))); this.score += Math.round(5000 * this.scoreMul); }
     else { const chance = (0.11 + (this.combo > 5 ? 0.05 : 0)) * (this.waveMod?.key === 'pluie' ? 3 : 1); if (Math.random() < chance) { const keys = ['slowmo', 'boost', 'shield', 'disco', 'ammo', 'heal', 'rage', 'magnet']; this.weapons.dropPowerup(keys[Math.floor(Math.random() * keys.length)], e.pos.clone()); } }
     if (this.combo >= 5 && this.combo % 5 === 0) this.fx.confettiRain(this.player.pos.clone().add(new THREE.Vector3(0, 3.2, 0)), 25);
   }
   damagePlayer(amount, from) {
     if (this.state !== 'playing') return;
-    let a = amount * this.difficulty * 0.9;
+    if (this.macarena > 0 || this.folie.sitting > 0 && Math.random() < 0.5) return; // dancing is sacred; the toilet is half-sacred
+    let a = amount * this.difficulty * 0.72;
     if (this.shield > 0) { this.shield -= a; this.fx.ring(this.player.pos, { color: 0xd7f06a, size: 1.6, life: 0.3, y: 1 }); this.fx.text(this.player.eyePos.clone().addScaledVector(this.player.forward(), 1), 'BLOQUÉ', { color: '#d7f06a', size: 14 }); if (this.shield <= 0) { this.ui.toast('Bouclier brisé'); this.powerups.shield && (this.powerups.shield.t = 0); } return; }
     this.player.damage(a, from);
     if (this.player.dead) { this.gameOver(); if (this.state === 'over') this.ui.announce('HORS COMBAT', `vague ${this.wave} · ${this.stats.kills} zinzins`); }
@@ -204,7 +223,7 @@ export class Game {
   }
   breakBottle(i, dir) {
     const r = this.bottles.destroy(i); if (!r) return; this.stats.bottles++;
-    const p = new THREE.Vector3(r.x, r.y, r.z); this.fx.bottleBreak(p, r.color); this.audio.play('bottle', p); this.score += 5;
+    const p = new THREE.Vector3(r.x, r.y, r.z); this.fx.bottleBreak(p, r.color); this.audio.play('bottle', p); this.score += 5; this.folie.onBottle();
     if (this.stats.bottles % 25 === 0) this.ui.toast(`${this.stats.bottles} bouteilles cassées. Le patron va être ravi.`);
   }
   hitFlamingo(dmg, point) {
@@ -216,7 +235,7 @@ export class Game {
   // ------------------------------------------------------------- power-ups
   applyPowerup(k) {
     const def = PU[k]; this.audio.play('powerup'); this.ui.announce(def.name, { slowmo: 'Le temps se fige. Pas vous.', boost: 'Cadence + vitesse + munitions infinies', shield: 'Encaisse 120 dégâts', disco: 'Les zinzins dansent. Frappez-les.', ammo: 'Toutes les armes rechargées', heal: '+50 vitalité', rage: 'Dégâts ×2 · baffes ×6', magnet: 'Les bonus viennent à vous' }[k]);
-    this.powerups[k] = { name: def.name, color: def.color, t: def.dur, max: def.dur };
+    this.powerups[k] = { name: def.name, color: def.color, t: def.dur, max: def.dur }; this.folie.onPowerup(); this.tts.say(def.name.toLowerCase(), { priority: 1 });
     if (k === 'ammo') this.weapons.refillAll(); if (k === 'heal') this.player.hp = Math.min(this.player.maxHp, this.player.hp + 50);
     if (k === 'shield') this.shield = 120; if (k === 'slowmo') this.audio.play('slowmo');
     if (k === 'disco') { for (const e of this.enemies.alive) e.dance = def.dur; }
@@ -253,6 +272,9 @@ export class Game {
       this.enemies.update(gdt, this.time);
       this.props.update(gdt);
       if (this.state === 'playing') this.waves.update(gdt);
+      this.folie.update(dt, this.time);
+      if (this.macarena > 0) { this.macarena -= dt; this.weapons.throwT = Math.max(this.weapons.throwT, 0.05); this.player.extraRoll += Math.sin(this.time * 6) * 0.05; this.player.kickVel.y += Math.sin(this.time * 12) * 3; if (this.macarena <= 0) this.ui.toast('Fin de la Macarena. Reprise des hostilités.', 2); }
+      this.notifT -= dt; if (this.notifT <= 0 && this.state === 'playing') { this.notifT = 14 + Math.random() * 16; this.ui.notif(NONSENSE[Math.floor(Math.random() * NONSENSE.length)]); }
       this.comboT -= dt; if (this.comboT <= 0 && this.combo > 1) { this.combo = 1; }
       this.fx.update(gdt, this.R.camera);
       if (this.flamingoFall) { const f = this.flamingoFall, F = this.world.flamingo; f.t += gdt; f.v.y -= 12 * gdt; F.position.addScaledVector(f.v, gdt); F.rotation.x += gdt * 3; F.rotation.z += gdt * 1.5; const fy = this.world.floorHeight(F.position.x, F.position.z); if (F.position.y <= fy + 0.3) { const [nx, nz] = this.world.nav.nearestFree(F.position.x, F.position.z); this.weapons.drop('flamingo', new THREE.Vector3(nx, 0, nz)); F.visible = false; F.userData.taken = true; this.flamingoFall = null; this.fx.dust(F.position, 10); this.audio.play('land', F.position); this.fx.shake = 0.8; } }

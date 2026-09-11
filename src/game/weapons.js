@@ -1,6 +1,6 @@
 // Weapons: definitions, viewmodels, firing (hitscan / projectiles / beam), reload, switching, grenades, pickups.
 import * as THREE from 'three';
-import { buildFists, buildVapo, buildFumi, buildGummy, buildFlamant, buildLaser, buildBulles, buildFlamingoMelee, buildGrenadeHand, VM_MATS } from './viewmodels.js';
+import { buildFists, buildVapo, buildFumi, buildGummy, buildFlamant, buildLaser, buildBulles, buildFlamingoMelee, buildGrenadeHand, buildSeche, VM_MATS } from './viewmodels.js';
 
 export const WEAPONS = {
   fists: { key: 'fists', name: 'Poings', desc: 'MÊLÉE · CLIC GAUCHE POUR COGNER', slot: 0, melee: true, damage: 28, range: 2.0, arc: 0.9, rate: 0.36, knock: 5, sound: 'punch_hit' },
@@ -11,9 +11,10 @@ export const WEAPONS = {
   flamant: { key: 'flamant', name: 'Lance-Flamant', desc: 'EXPLOSIF · CONFETTIS GARANTIS', slot: 4, mag: 1, reserve: 6, damage: 130, rate: 1.0, reload: 1.7, auto: false, kick: 4, sound: 'shot_flamant', projectile: { speed: 17, gravity: 1.2, radius: 0.18, explode: 3.4, life: 5 }, knock: 20, color: 0xff4fa3 },
   laser: { key: 'laser', name: 'Rayon Botanique', desc: 'FAISCEAU CONTINU · SURCHAUFFE', slot: 5, beam: true, dps: 95, mag: 100, reserve: 0, drain: 28, regen: 24, rate: 0, kick: 0.05, sound: 'laser', color: 0xd7f06a, knock: 0.6 },
   bulles: { key: 'bulles', name: 'Canon à Bulles', desc: 'PIÈGE FLOTTANT · ×1,6 DÉGÂTS', slot: 6, mag: 5, reserve: 25, damage: 10, rate: 0.55, reload: 1.8, auto: false, kick: 0.8, sound: 'bubble', projectile: { speed: 9, gravity: -0.5, radius: 0.32, life: 5, bubble: true }, knock: 0, color: 0x5ef2ff },
+  seche: { key: 'seche', name: 'Sèche-Cheveux 9000', desc: 'SOUFFLE CHAUD · ENVOIE TOUT DANS LE DÉCOR', slot: 7, wind: true, mag: 100, reserve: 0, drain: 22, regen: 30, rate: 0, kick: 0.02, sound: 'dryer', color: 0xff8ac5, knock: 0 },
   grenade: { key: 'grenade', name: 'Gummy-Bombe', damage: 150, projectile: { speed: 13, gravity: 12, radius: 0.09, bounces: 2, explode: 3.3, life: 1.7, fuse: true }, knock: 22, color: 0xff4fa3 },
 };
-export const SLOT_COUNT = 7;
+export const SLOT_COUNT = 8;
 
 const V = () => new THREE.Vector3();
 const _a = V(), _b = V();
@@ -29,7 +30,7 @@ export function rayCapsule(o, d, c, maxT) {
 export class Weapons {
   constructor(game) {
     this.g = game; this.player = game.player; this.camera = game.R.camera; this.fx = game.fx; this.audio = game.audio; this.world = game.world;
-    this.inv = {}; this.slots = ['fists', null, null, null, null, null, null]; this.cur = 'fists';
+    this.inv = {}; this.slots = ['fists', null, null, null, null, null, null, null]; this.cur = 'fists';
     this.cd = 0; this.reloading = 0; this.reloadTotal = 0; this.draw = 0; this.swing = 0; this.hand = 0; this.recoil = V(); this.recoilV = V(); this.swayX = 0; this.swayY = 0;
     this.projectiles = []; this.drops = []; this.slideT = 0; this.pumpT = 0; this.beamOn = false; this.beamAcc = new Map(); this.overheat = 0; this.grenades = 2; this.throwT = 0; this.grenadeCd = 0;
     this.fireRateMul = 1; this.damageMul = 1; this.infinite = false;
@@ -41,7 +42,7 @@ export class Weapons {
     this.setCurrent('fists', true);
   }
   buildModels() {
-    this.models = { fists: buildFists(), vapo: buildVapo(), fumi: buildFumi(), gummy: buildGummy(), flamant: buildFlamant(this.world), laser: buildLaser(), bulles: buildBulles(), flamingo: buildFlamingoMelee(this.world) };
+    this.models = { fists: buildFists(), vapo: buildVapo(), fumi: buildFumi(), gummy: buildGummy(), flamant: buildFlamant(this.world), laser: buildLaser(), bulles: buildBulles(), flamingo: buildFlamingoMelee(this.world), seche: buildSeche() };
     this.grenadeVm = buildGrenadeHand(); this.grenadeVm.visible = false; this.vm.add(this.grenadeVm);
     for (const k in this.models) { const m = this.models[k]; m.visible = false; m.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.frustumCulled = false; o.renderOrder = 10; } }); this.vm.add(m); }
     this.grenadeVm.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.renderOrder = 10; } });
@@ -53,7 +54,7 @@ export class Weapons {
     const d = WEAPONS[key]; if (!d) return false;
     if (key === 'grenade') { this.grenades = Math.min(6, this.grenades + Math.round(2 * ammoMul)); return true; }
     if (d.melee) { if (key === 'flamingo') { this.slots[0] = 'flamingo'; this.setCurrent('flamingo'); } return true; }
-    if (this.inv[key]) { if (d.beam) { this.inv[key].mag = 100; return true; } const a = this.inv[key]; const before = a.reserve; a.reserve = Math.min(d.reserve * 2, a.reserve + Math.round(d.reserve * ammoMul)); return a.reserve > before; }
+    if (this.inv[key]) { if (d.beam || d.wind) { this.inv[key].mag = 100; return true; } const a = this.inv[key]; const before = a.reserve; a.reserve = Math.min(d.reserve * 2, a.reserve + Math.round(d.reserve * ammoMul)); return a.reserve > before; }
     this.inv[key] = { mag: d.mag, reserve: Math.round(d.reserve * ammoMul) }; this.slots[d.slot] = key; this.setCurrent(key); return true;
   }
   refillAll() { for (const k in this.inv) { const d = WEAPONS[k]; this.inv[k].mag = d.mag; this.inv[k].reserve = d.reserve * 2; } this.grenades = Math.min(6, this.grenades + 2); this.overheat = 0; }
@@ -78,12 +79,13 @@ export class Weapons {
     P.adsTarget = (inp.mouse.right && !D.melee && this.reloading <= 0 && this.throwT <= 0) ? 1 : 0;
     if (this.reloading > 0) { this.reloading -= gdt; if (this.reloading <= 0) { const a = this.ammo; const need = D.mag - a.mag; const take = this.infinite ? need : Math.min(need, a.reserve); a.mag += take; if (!this.infinite) a.reserve -= take; this.audio.play('rack'); } }
     // beam energy
-    if (D.beam) { const a = this.ammo; if (this.overheat > 0) { this.overheat -= gdt; a.mag = Math.min(100, a.mag + D.regen * 0.5 * gdt); } else if (!this.beamOn) a.mag = Math.min(100, a.mag + D.regen * gdt); }
-    const wantFire = D.auto || D.beam ? inp.mouse.left : inp.mouse.leftPressed;
+    if (D.beam || D.wind) { const a = this.ammo; if (this.overheat > 0) { this.overheat -= gdt; a.mag = Math.min(100, a.mag + D.regen * 0.5 * gdt); } else if (!this.beamOn) a.mag = Math.min(100, a.mag + D.regen * gdt); }
+    const wantFire = D.auto || D.beam || D.wind ? inp.mouse.left : inp.mouse.leftPressed;
     const punch = inp.wasPressed('KeyE');
     if (!P.dead && this.draw <= 0 && this.throwT <= 0) {
       if (punch && !D.melee) this.melee(WEAPONS.fists);
       else if (D.beam) { if (wantFire && this.overheat <= 0 && this.ammo.mag > 0) this.beam(gdt); else this.stopBeam(); }
+      else if (D.wind) { if (wantFire && this.overheat <= 0 && this.ammo.mag > 0) this.wind(gdt); else this.stopBeam(); }
       else if (wantFire && this.cd <= 0 && this.reloading <= 0) { if (D.melee) this.melee(D); else this.fire(); }
     } else this.stopBeam();
     if (this.throwT > 0) this.throwT -= gdt;
@@ -92,7 +94,7 @@ export class Weapons {
     this.updateDrops(gdt);
     this.animate(dt, gdt);
   }
-  startReload() { const D = this.def, a = this.ammo; if (D.melee || D.beam || this.reloading > 0 || !a || a.mag >= D.mag || (a.reserve <= 0 && !this.infinite)) return; this.reloading = this.reloadTotal = D.reload * (this.fireRateMul > 1 ? 0.7 : 1); this.audio.play('reload'); this.player.adsTarget = 0; }
+  startReload() { const D = this.def, a = this.ammo; if (D.melee || D.beam || D.wind || this.reloading > 0 || !a || a.mag >= D.mag || (a.reserve <= 0 && !this.infinite)) return; this.reloading = this.reloadTotal = D.reload * (this.fireRateMul > 1 ? 0.7 : 1); this.audio.play('reload'); this.player.adsTarget = 0; }
   spreadMul() { const P = this.player; return P.ads > 0.5 ? 0.35 : (P.moving > 1 ? 1.6 : 1) * (P.onGround ? 1 : 1.8); }
   muzzleWorld(D) { const model = this.models[this.cur]; const origin = this.camera.getWorldPosition(_a.clone()); const dir = this.camera.getWorldDirection(_b.clone()); return model?.userData.muzzle ? model.userData.muzzle.getWorldPosition(V()) : origin.addScaledVector(dir, 0.4); }
   fire() {
@@ -130,6 +132,26 @@ export class Weapons {
     else if (h.type === 'prop' && Math.random() < dt * 6) h.prop.hit(10, dir, 2);
     else if (h.type === 'world' && Math.random() < dt * 30) { this.fx.burst(h.point, 2, { speed: 1.5, color: [0.85, 1, 0.4], life: 0.25, size: 0.025, grav: 4, dir: h.normal }); if (Math.random() < 0.15) this.fx.decal(h.point, h.normal || new THREE.Vector3(0, 1, 0), 0.06, 0x333322); }
   }
+  // hair dryer: cone of hot air pushing zinzins, props and projectiles; wall impacts hurt
+  wind(dt) {
+    const D = this.def, a = this.ammo, P = this.player, g = this.g;
+    if (!this.beamOn) { this.beamOn = true; this.audio.play('dryer_start'); }
+    a.mag -= D.drain * dt * (this.infinite ? 0 : 1); if (a.mag <= 0) { a.mag = 0; this.overheat = 1.8; this.stopBeam(); this.audio.play('overheat'); this.g.ui.toast('Le sèche-cheveux a trop chauffé.'); return; }
+    const origin = this.camera.getWorldPosition(V()), dir = this.camera.getWorldDirection(V()); const mz = this.muzzleWorld(D);
+    if (Math.random() < dt * 40) this.fx.puff(mz.clone().addScaledVector(dir, 0.3 + Math.random() * 2.5), { size: 0.3, life: 0.5, opacity: 0.18, color: 0xffd8e8, vel: dir.clone().multiplyScalar(6), grow: 3 });
+    for (let i = 0; i < 2; i++) this.fx.particle(mz.x, mz.y, mz.z, dir.x * 9 + (Math.random() - 0.5) * 2, dir.y * 9 + (Math.random() - 0.5) * 2, dir.z * 9 + (Math.random() - 0.5) * 2, { life: 0.35, size: 0.03, color: [1, 0.75, 0.55], drag: 1 });
+    if (Math.random() < dt * 6) this.audio.play('dryer_loop');
+    this.recoilV.x += (Math.random() - 0.5) * 0.3; P.fovKick = Math.max(P.fovKick, 1);
+    const RANGE = 6.5, ARC = 0.5;
+    for (const e of g.enemies.list) { if (!e.alive) continue; const to = e.chest.sub(origin); const d = to.length(); if (d > RANGE) continue; const c = to.clone().normalize().dot(dir); if (c < Math.cos(ARC)) continue;
+      const f = (1 - d / RANGE) * (e.T.boss ? 0.3 : 1) / Math.sqrt(e.T.weight) * (e.sizeMul < 1 ? 2 : 1); e.knock.addScaledVector(dir, 14 * f * dt); e.knock.y = 0; e.stagger = Math.max(e.stagger, 0.12); e.windT = 0.2;
+      if (e.knock.length() > 5 && Math.random() < dt * 3) { g.hitEnemy(e, 9, dir, 0, false, 'seche', e.chest); g.fx.text(e.headPos.clone().setY(e.headPos.y + 0.3), 'BROUSHING', { color: '#ff8ac5', size: 13 }); }
+      if (Math.random() < dt * 0.8) e.slip('EMPORTÉ !'); }
+    for (const p of g.props?.list || []) { if (!p.alive) continue; const to = p.pos.clone().sub(origin); const d = to.length(); if (d > RANGE || to.normalize().dot(dir) < Math.cos(ARC)) continue; p.vel.addScaledVector(dir, 12 * dt * (1 - d / RANGE) / p.mass); p.vel.y += 3 * dt; p.resting = false; }
+    for (const p of this.projectiles) { const to = p.pos.clone().sub(origin); const d = to.length(); if (d > RANGE || to.normalize().dot(dir) < Math.cos(ARC)) continue; p.vel.addScaledVector(dir, 20 * dt); }
+    for (const q of g.folie?.puddles || []) { const to = q.m.position.clone().sub(origin); if (to.length() < RANGE && to.normalize().dot(dir) > Math.cos(ARC)) q.life -= dt * 6; }
+    this.g.stats.shots += dt * 2;
+  }
   stopBeam() { if (this.beamOn) { this.beamOn = false; this.audio.play('laser_stop'); this.beamAcc.clear(); } }
   throwGrenade() {
     this.grenades--; this.grenadeCd = 0.9; this.throwT = 0.5; this.stopBeam(); this.audio.play('jump');
@@ -160,6 +182,7 @@ export class Weapons {
     if (D.key === 'gummy') { mesh = new THREE.Mesh(this.projGeo.gummy, this.projMat.gummy.clone()); mesh.material.color.setHSL(Math.random(), 0.8, 0.6); mesh.material.emissive.copy(mesh.material.color); }
     else if (D.key === 'flamant') { mesh = this.world.makeFlamingo(0.22); }
     else if (D.key === 'bulles') { mesh = new THREE.Mesh(this.projGeo.bubble, this.projMat.bubble); }
+    else if (D.key === 'pluie') { if (!this.projGeo.bottle) { this.projGeo.bottle = new THREE.CylinderGeometry(0.035, 0.035, 0.16, 10); } mesh = new THREE.Mesh(this.projGeo.bottle, this.projMat.gummy.clone()); mesh.material.color.setHSL(Math.random(), 0.7, 0.55); mesh.material.emissive.set(0); }
     else if (D.key === 'grenade') { mesh = new THREE.Mesh(this.projGeo.grenade, this.projMat.grenade); }
     else { mesh = new THREE.Mesh(new THREE.SphereGeometry(pd.radius, 10, 8), new THREE.MeshStandardMaterial({ color: 0xe8f4ff, emissive: 0xbfe6ff, emissiveIntensity: 0.8, transparent: true, opacity: 0.8 })); }
     mesh.position.copy(p); this.g.R.scene.add(mesh);
@@ -293,5 +316,5 @@ export class Weapons {
     }
     model.position.set(x, y, z); model.rotation.set(rx, ry, rz);
   }
-  reset() { this.inv = {}; this.slots = ['fists', null, null, null, null, null, null]; this.stopBeam(); this.setCurrent('fists', true); for (const p of this.projectiles) this.g.R.scene.remove(p.mesh); this.projectiles.length = 0; for (const d of this.drops) this.g.R.scene.remove(d.g); this.drops.length = 0; this.fireRateMul = 1; this.damageMul = 1; this.infinite = false; this.grenades = 2; this.overheat = 0; this.throwT = 0; }
+  reset() { this.inv = {}; this.slots = ['fists', null, null, null, null, null, null, null]; this.stopBeam(); this.setCurrent('fists', true); for (const p of this.projectiles) this.g.R.scene.remove(p.mesh); this.projectiles.length = 0; for (const d of this.drops) this.g.R.scene.remove(d.g); this.drops.length = 0; this.fireRateMul = 1; this.damageMul = 1; this.infinite = false; this.grenades = 2; this.overheat = 0; this.throwT = 0; }
 }

@@ -13,6 +13,8 @@ export const TYPES = {
   livreur:     { name: 'Livreur Turbo',       hp: 110, speed: 3.1, dmg: 18, range: 1.6, rate: 1.4,  scale: 1.0,  score: 280, color: '#ff8a1f', shirt: 'EXPRESS', mood: 2, weight: 2.2, charger: true },
   influenceur: { name: 'Influenceur',         hp: 60,  speed: 3.4, dmg: 4,  range: 8,   rate: 3.0,  scale: 0.98, score: 380, color: '#ffd700', shirt: 'LIKE', mood: 1, weight: 0.9, support: true, keep: 7 },
   kamikaze:    { name: 'Vapoteur Explosif',   hp: 50,  speed: 4.2, dmg: 34, range: 1.7, rate: 9,    scale: 0.95, score: 200, color: '#ff3b3b', shirt: 'BOOM', mood: 2, weight: 0.9, kamikaze: true },
+  touriste:    { name: 'Touriste à Selfies',   hp: 65,  speed: 2.8, dmg: 3,  range: 9,   rate: 3.2,  scale: 1.0,  score: 220, color: '#ffffff', shirt: 'I ♥ VAPE', mood: 1, weight: 1, ranged: 'selfie', keep: 6, glasses: true },
+  mime:        { name: 'Le Mime',              hp: 80,  speed: 3.2, dmg: 12, range: 1.5, rate: 1.2,  scale: 1.0,  score: 260, color: '#111111', shirt: '(…)', mood: 1, weight: 1, mime: true, hair: '#111111' },
   boss:        { name: 'LE PATRON ZINZIN',    hp: 1400, speed: 2.2, dmg: 30, range: 14, rate: 1.2, scale: 1.35, score: 2500, color: '#ff4fa3', shirt: 'PATRON', mood: 3, weight: 6, ranged: 'rocket', keep: 6, boss: true, beard: true },
 };
 const TAUNTS = ['T\'AS PAS DE 50 ML ?!', 'JE VEUX PARLER AU PATRON', 'C\'EST OÙ LES PROMOS ?', 'VAPOTER C\'EST LA VIE', 'MON CLOUD EST PLUS GROS', 'ZINZIN !!!', 'FRAISE OU MENTHE ?', 'JE SUIS PAS FOU', 'CBD POUR TOUS', 'RENDS-MOI MON FLAMANT', 'VOUS AVEZ DU 3 MG ?', 'LA CAISSE EST LÀ-BAS ?'];
@@ -20,14 +22,15 @@ const V = () => new THREE.Vector3();
 
 // ---------------------------------------------------------------- atlas (one 256² texture per zinzin)
 const CELLS = { skin: [0, 0, 64, 64], pants: [64, 0, 64, 64], hair: [128, 0, 64, 64], shoe: [192, 0, 64, 64], shirt: [0, 64, 64, 64], accent: [64, 64, 64, 64], metal: [128, 64, 64, 64], white: [192, 64, 64, 64], face: [0, 128, 128, 128], shirtFront: [128, 128, 128, 128] };
-function buildAtlas({ skin, shirt, shirtText, pants, hair, accent, face }) {
+function buildAtlas({ skin, shirt, shirtText, pants, hair, accent, face, stripes = false }) {
   const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
   const fill = (cell, col) => { const [cx, cy, w, h] = CELLS[cell]; x.fillStyle = col; x.fillRect(cx, cy, w, h); };
   fill('skin', skin); fill('pants', pants); fill('hair', hair); fill('shoe', '#1a1a1a'); fill('shirt', shirt); fill('accent', accent); fill('metal', '#2a2d33'); fill('white', '#f0f0f0');
   // subtle fabric noise on shirt/pants
   for (let i = 0; i < 700; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.15})`; x.fillRect(Math.random() * 128, Math.random() * 64 + (Math.random() < 0.5 ? 0 : 64), 2, 1); }
   x.drawImage(face, 0, 128, 128, 128);
-  fill('shirtFront', shirt); for (let i = 0; i < 500; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.12})`; x.fillRect(128 + Math.random() * 128, 128 + Math.random() * 128, 2, 1); }
+  fill('shirtFront', shirt);
+  if (stripes) { x.fillStyle = '#f2f2f2'; for (let yy = 64; yy < 128; yy += 16) x.fillRect(0, yy, 64, 8); for (let yy = 128; yy < 256; yy += 32) x.fillRect(128, yy, 128, 16); } for (let i = 0; i < 500; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.12})`; x.fillRect(128 + Math.random() * 128, 128 + Math.random() * 128, 2, 1); }
   x.fillStyle = 'rgba(255,255,255,.9)'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `900 ${shirtText.length > 5 ? 22 : 30}px Inter, Arial, sans-serif`; x.fillText(shirtText, 192, 178);
   x.fillStyle = 'rgba(255,255,255,.35)'; x.font = '700 11px Inter, Arial, sans-serif'; x.fillText('VAP&CO', 192, 214);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; return t;
@@ -43,7 +46,7 @@ export class Zinzin {
     this.pos = new THREE.Vector3(x, this.g.world.floorHeight(x, z), z); this.vel = V(); this.yaw = Math.random() * 6.28; this.targetYaw = this.yaw;
     this.scale = T.scale * (0.94 + Math.random() * 0.12); this.radius = 0.32 * this.scale; this.height = 1.8 * this.scale;
     this.alive = true; this.state = 'spawn'; this.stateT = 0; this.phase = Math.random() * 6; this.attackCd = 1 + Math.random(); this.stagger = 0; this.path = null; this.pathT = Math.random() * 0.5; this.wp = 0;
-    this.knock = V(); this.deathT = 0; this.fall = V(); this.tumble = new THREE.Euler(); this.dance = 0; this.frozen = 0; this.lastTaunt = 0; this.trapped = 0; this.buff = 0; this.fuse = -1; this.charge = null; this.chargeCd = 2 + Math.random() * 2;
+    this.knock = V(); this.deathT = 0; this.fall = V(); this.tumble = new THREE.Euler(); this.dance = 0; this.frozen = 0; this.lastTaunt = 0; this.trapped = 0; this.buff = 0; this.fuse = -1; this.charge = null; this.chargeCd = 2 + Math.random() * 2; this.slipT = 0; this.slipCd = 0; this.stuck = 0; this.flee = 0; this.wetT = 0; this.sizeMul = 1;
     this.buildRig(opts);
     this.mesh.position.copy(this.pos); this.mesh.rotation.y = this.yaw;
     if (opts.dropIn) { this.pos.y += 6; this.state = 'drop'; this.vel.y = 0; }
@@ -55,9 +58,10 @@ export class Zinzin {
     const hair = T.hair || ['#2b1d14', '#5b3b1f', '#111111', '#c9a04a', '#7a1f1f'][Math.floor(Math.random() * 5)];
     const pants = ['#2c3550', '#1f1f22', '#4d3b2c', '#6b6b6b', '#3d2f4f'][Math.floor(Math.random() * 5)];
     const accent = { mamie: '#8b1a3a', vigile: '#111111', boss: '#ffd700', livreur: '#ff8a1f', influenceur: '#ffd700', kamikaze: '#ff3b3b', vapoteur: '#5ef2ff' }[this.type] || '#d7f06a';
-    const face = genFace({ skin, mood: T.mood, seed: this.id + 1, hair, beard: T.beard, glasses: T.glasses, size: 128 });
-    const atlas = buildAtlas({ skin, shirt: T.color, shirtText: T.shirt, pants, hair, accent, face: face.image }); face.dispose();
-    this.mat = new THREE.MeshStandardMaterial({ map: atlas, roughness: 0.8, metalness: 0.02 });
+    const skinCol = T.mime ? '#f4f4f4' : skin;
+    const face = genFace({ skin: skinCol, mood: T.mood, seed: this.id + 1, hair, beard: T.beard, glasses: T.glasses, size: 128 });
+    const atlas = buildAtlas({ skin: skinCol, shirt: T.color, shirtText: T.shirt, pants: T.mime ? '#111111' : pants, hair, accent, face: face.image, stripes: !!T.mime }); face.dispose();
+    this.mat = new THREE.MeshStandardMaterial({ map: atlas, roughness: 0.8, metalness: 0.02, transparent: !!T.mime, opacity: T.mime ? 0.45 : 1 });
     // bones
     const bones = []; const B = (name, parent, x, y, z) => { const b = new THREE.Bone(); b.name = name; b.position.set(x, y, z); if (parent) parent.add(b); bones.push(b); b.userData.rest = parent ? parent.userData.rest.clone().add(b.position) : b.position.clone(); return b; };
     const root = B('root', null, 0, 0, 0);
@@ -110,6 +114,8 @@ export class Zinzin {
     if (this.type === 'boss') { part(new THREE.CylinderGeometry(S(0.16), S(0.13), S(0.12), 8, 1, true), this.head, 'accent', 0, S(0.34), 0); part(new THREE.CylinderGeometry(S(0.07), S(0.07), S(0.8), 12), R, 'accent', 0, S(-0.3), S(-0.2), Math.PI / 2); }
     if (this.type === 'livreur') { part(new THREE.SphereGeometry(S(0.17), 10, 8), this.head, 'accent', 0, S(0.16), 0); part(new THREE.BoxGeometry(S(0.36), S(0.34), S(0.24)), this.torso, 'accent', 0, S(0.25), S(-0.24)); part(new THREE.BoxGeometry(S(0.16), S(0.16), S(0.08)), this.torso, 'white', 0, S(0.25), S(-0.37)); }
     if (this.type === 'influenceur') { part(new THREE.BoxGeometry(S(0.07), S(0.14), S(0.01)), L, 'accent', 0, S(-0.34), S(0.04)); part(new THREE.TorusGeometry(S(0.09), S(0.012), 6, 16), L, 'white', 0, S(-0.34), S(0.06)); part(new THREE.BoxGeometry(S(0.3), S(0.04), S(0.3)), this.head, 'white', 0, S(0.3), 0); }
+    if (this.type === 'touriste') { part(new THREE.CylinderGeometry(S(0.012), S(0.012), S(0.7), 6), R, 'metal', 0, S(-0.3), S(0.3), 1.1); part(new THREE.BoxGeometry(S(0.08), S(0.15), S(0.012)), R, 'white', 0, S(-0.55), S(0.62), 0.3); part(new THREE.BoxGeometry(S(0.36), S(0.06), S(0.2)), this.head, 'accent', 0, S(0.3), S(0.04)); }
+    if (this.type === 'mime') { part(new THREE.CylinderGeometry(S(0.16), S(0.12), S(0.05), 12), this.head, 'metal', 0, S(0.3), 0); part(new THREE.BoxGeometry(S(0.3), S(0.04), S(0.3)), this.head, 'accent', S(0.03), S(0.31), 0, 0, 0, 0.15); }
     if (this.type === 'kamikaze') { for (const sx of [-1, 1]) part(new THREE.CylinderGeometry(S(0.06), S(0.06), S(0.34), 10), this.torso, 'accent', sx * S(0.09), S(0.24), S(-0.18)); part(new THREE.BoxGeometry(S(0.3), S(0.1), S(0.06)), this.torso, 'metal', 0, S(0.42), S(-0.18)); }
     const geo = mergeGeometries(geos, false);
     const mesh = new THREE.SkinnedMesh(geo, this.mat); mesh.add(root); mesh.bind(new THREE.Skeleton(bones));
@@ -135,6 +141,9 @@ export class Zinzin {
     if (this.trapped > 0) { this.trapped -= dt; const fy = W.floorHeight(this.pos.x, this.pos.z); const want = fy + 1.4 + Math.sin(this.phase * 2) * 0.15; this.pos.y += (want - this.pos.y) * (1 - Math.exp(-dt * 3)); this.animate(dt, 0, false, true); this.sync(dt); if (this.trapped <= 0) { this.untrap(); } return; }
     if (this.pos.y > W.floorHeight(this.pos.x, this.pos.z) + 0.05 && this.state !== 'drop') { this.pos.y = Math.max(W.floorHeight(this.pos.x, this.pos.z), this.pos.y - 8 * dt); }
     if (this.frozen > 0) { this.frozen -= dt; this.sync(dt); return; }
+    this.slipCd = Math.max(0, this.slipCd - dt); if (this.wetT > 0) this.wetT -= dt;
+    if (this.slipT > 0) { this.slipT -= dt; this.pos.addScaledVector(this.knock, dt); this.knock.multiplyScalar(Math.exp(-dt * 3)); this.collide(); this.animate(dt, 0, false, false, true); this.sync(dt); return; }
+    if (this.stuck > 0) { this.stuck -= dt; this.charge = null; this.animate(dt, 0, false, true); this.sync(dt); return; }
     if (this.dance > 0) { this.dance -= dt; this.animate(dt, 0, true); this.sync(dt); return; }
     // kamikaze fuse
     if (this.fuse >= 0) { this.fuse -= dt; this.mat.emissive.setRGB(1, 0.1, 0.1); this.mat.emissiveIntensity = Math.sin(this.fuse * 40) > 0 ? 0.8 : 0; if (this.fuse <= 0) { this.detonate(); return; } this.animate(dt, 0); this.sync(dt); return; }
@@ -153,8 +162,13 @@ export class Zinzin {
     const toT = P.pos.clone().sub(this.pos).setY(0); const dist = toT.length();
     const T = this.T; let move = V();
     if (this.losT === undefined || (this.losT -= dt) <= 0) { this.losT = 0.12 + Math.random() * 0.08; this.los = W.hasLineOfSight(this.chest, P.eyePos); } const los = this.los;
-    if (t - this.lastTaunt > 9 && Math.random() < dt * 0.15 && dist < 12) { this.lastTaunt = t; g.fx.text(this.headPos.clone().setY(this.headPos.y + 0.35), this.type === 'influenceur' ? 'LIKE ET ABONNE-TOI !' : TAUNTS[Math.floor(Math.random() * TAUNTS.length)], { color: '#ffe', size: 13, life: 1.6, glow: '#000' }); g.audio.play(Math.random() < 0.5 ? 'laugh' : 'grunt', this.pos); }
-    if (T.ranged || T.support) {
+    if (!T.mime && t - this.lastTaunt > 9 && Math.random() < dt * 0.15 && dist < 12) { this.lastTaunt = t; g.fx.text(this.headPos.clone().setY(this.headPos.y + 0.35), this.type === 'influenceur' ? 'LIKE ET ABONNE-TOI !' : TAUNTS[Math.floor(Math.random() * TAUNTS.length)], { color: '#ffe', size: 13, life: 1.6, glow: '#000' }); g.audio.play(Math.random() < 0.5 ? 'laugh' : 'grunt', this.pos); }
+    if (this.flee > 0) { this.flee -= dt; const away = toT.clone().normalize().multiplyScalar(-1); const sep = this.sys.separation(this); away.add(sep); const spd = this.speed * 1.3; const wantV = away.normalize().multiplyScalar(spd); const k = 1 - Math.exp(-dt * 8); this.vel.x += (wantV.x - this.vel.x) * k; this.vel.z += (wantV.z - this.vel.z) * k; this.pos.x += this.vel.x * dt; this.pos.z += this.vel.z * dt; this.collide(); this.pos.y = W.floorHeight(this.pos.x, this.pos.z); this.targetYaw = Math.atan2(-toT.x, -toT.z); let dy0 = this.targetYaw - this.yaw; dy0 = Math.atan2(Math.sin(dy0), Math.cos(dy0)); this.yaw += dy0 * (1 - Math.exp(-dt * 8)); this.animate(dt, spd); this.sync(dt); return; }
+    if (T.mime) { // the mime sneaks toward the player's back
+      const back = P.pos.clone().addScaledVector(P.forward(), -1.2); const toB = back.clone().sub(this.pos).setY(0);
+      if (dist > T.range && toB.length() > 0.6) move = this.follow(dt, back); else if (dist <= T.range + 0.4 && this.attackCd <= 0) this.meleeAttack();
+      this.targetYaw = Math.atan2(toT.x, toT.z);
+    } else if (T.ranged || T.support) {
       if (dist > T.keep + 1.5 || (!los && !T.support)) move = this.follow(dt, P.pos); else if (dist < T.keep - 2) move = toT.clone().normalize().multiplyScalar(-1); else { move = new THREE.Vector3(-toT.z, 0, toT.x).normalize().multiplyScalar(Math.sin(this.phase * 0.7) > 0 ? 1 : -1); if (W.isBlocked(this.pos.x + move.x * 0.6, this.pos.z + move.z * 0.6, 0.3, this.pos.y)) move.set(0, 0, 0); }
       if (T.ranged && los && dist < T.range && this.attackCd <= 0) this.shoot();
       if (T.support && this.attackCd <= 0) this.pulse();
@@ -221,6 +235,10 @@ export class Zinzin {
     } else if (T.ranged === 'vapor') {
       g.audio.play('vapor', this.pos); g.fx.puff(from, { size: 0.4, life: 0.5, color: 0xbfe6ff, opacity: 0.5, grow: 2 });
       g.weapons.spawnProjectile(from, dir, { key: 'vapor', damage: T.dmg, knock: 3, projectile: { speed: 11, gravity: 2, radius: 0.22, life: 4 } }, 'enemy');
+    } else if (T.ranged === 'selfie') {
+      g.audio.play('shutter', this.pos); g.fx.light(from.clone().addScaledVector(dir, 0.6), 0xffffff, 6, 0.12, 6); g.fx.text(this.headPos.clone().setY(this.headPos.y + 0.35), 'CHEESE !', { color: '#fff', size: 16, glow: '#000' });
+      const dist = P.pos.distanceTo(this.pos); const facing = P.lookDir().dot(dir.clone().multiplyScalar(-1)) > 0.55; if (facing && dist < 9) { g.fx.flash = Math.max(g.fx.flash, 0.9); g.fx.flashColor.set(0xffffff); g.ui.toast('Aveuglé par un selfie.', 1.5); g.damagePlayer(T.dmg, this); }
+      if (Math.random() < 0.3) g.tts.say(['C\'est pour mon Insta', 'Souriez !', 'Encore une pour la story'][Math.floor(Math.random() * 3)], { priority: 0, pitch: 1.2 });
     } else if (T.ranged === 'rocket') {
       g.audio.play('shot_flamant', this.pos); g.fx.muzzle(from, dir, 0xff4fa3);
       dir.y += 0.08; g.weapons.spawnProjectile(from, dir.normalize(), { key: 'flamant', damage: T.dmg * 2, knock: 12, projectile: { speed: 13, gravity: 1.5, radius: 0.2, explode: 2.6, life: 5 } }, 'enemy');
@@ -239,6 +257,12 @@ export class Zinzin {
     this.hp = 0; this.alive = false; this.dead = true; this.remove = true; this.dispose();
     g.explode(this.chest, 3, 60, 'enemy', 'kamikaze'); g.stats.kills++; g.waves.onKill();
   }
+  slip(label = 'GLISSADE !') {
+    if (!this.alive || this.slipCd > 0 || this.T.boss) return false; this.slipT = 1.3; this.slipCd = 3.5; this.charge = null;
+    this.knock.set(this.vel.x * 0.6 + (Math.random() - 0.5) * 2, 0, this.vel.z * 0.6 + (Math.random() - 0.5) * 2); this.vel.set(0, 0, 0);
+    this.g.fx.text(this.headPos, label, { color: '#ffef6a', size: 16, glow: '#000' }); this.g.audio.play('slip', this.pos); this.g.fx.dust(this.pos, 3); return true;
+  }
+  setSize(m) { this.sizeMul = m; this.mesh.scale.setScalar(m); this.radius = 0.32 * this.scale * m; this.height = 1.8 * this.scale * m * (this.T.boss ? 1.44 : 1); if (this.T.boss) this.radius = 0.7 * m; this.blob.scale.setScalar(1); }
   trap(dur = 4) {
     if (!this.alive || this.T.boss) return false; this.trapped = dur; this.charge = null; this.fuse = -1; this.vel.set(0, 0, 0);
     if (!this.bubble) { this.bubble = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0, envMapIntensity: 1.8, depthWrite: false })); this.mesh.add(this.bubble); }
@@ -260,7 +284,7 @@ export class Zinzin {
     this.alive = false; this.deathT = 0; this.dead = true; this.hp = 0; this.trapped = 0; if (this.bubble) this.bubble.visible = false;
     const k = Math.max(3, knock) / Math.sqrt(this.T.weight); this.fall.copy(dir).setY(0).normalize().multiplyScalar(k * 1.2); this.fall.y = 2 + k * 0.4;
     this.tumbleV = new THREE.Vector3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 6); this.tumble.set(0, this.yaw, 0);
-    this.g.audio.play('scream', this.pos); this.mat.emissive.setRGB(0, 0, 0);
+    if (this.T.mime) this.g.fx.text(this.headPos, '…', { color: '#fff', size: 30, glow: '#000', life: 2 }); else this.g.audio.play('scream', this.pos); this.mat.emissive.setRGB(0, 0, 0);
     if (this.mount) this.mount.visible = false;
   }
   updateDeath(dt) {
@@ -275,12 +299,13 @@ export class Zinzin {
       for (const a of this.arms) { a.sh.rotation.x += (1.4 - a.sh.rotation.x) * dt * 3; a.el.rotation.x += (0.6 - a.el.rotation.x) * dt * 3; }
       for (const l of this.legs) { l.hip.rotation.x *= Math.exp(-dt * 3); l.kn.rotation.x *= Math.exp(-dt * 3); }
       this.blob.visible = false;
-    } else if (this.deathT < 3.9) { const k = (this.deathT - 3.0) / 0.9; this.mesh.position.y -= dt * 0.8; if (!this.mat.transparent) { this.mat.transparent = true; this.mat.needsUpdate = true; } this.mat.opacity = 1 - k; }
+    } else if (this.deathT < 3.9) { const k = (this.deathT - 3.0) / 0.9; this.mesh.position.y -= dt * 0.8; if (!this.mat.transparent) { this.mat.transparent = true; this.mat.needsUpdate = true; } this.mat.opacity = (this.T.mime ? 0.45 : 1) * (1 - k); }
     else this.remove = true;
   }
   // ---------------------------------------------------------------- animation
-  animate(dt, speed, dancing = false, floating = false) {
+  animate(dt, speed, dancing = false, floating = false, slipping = false) {
     const s = this.scale, T = this.T; const moving = Math.min(1, speed / 2.5);
+    if (slipping) { const k = Math.min(1, (1.3 - this.slipT) * 4); this.pelvis.position.y = (T.boss ? 1.35 : 0.95) * s * (1 - 0.55 * k); this.pelvis.rotation.set(-1.4 * k, 0, 0); this.torso.rotation.set(0.2 * k, 0, 0); this.head.rotation.set(-0.4 * k, 0, 0); for (let i = 0; i < 2; i++) { this.arms[i].sh.rotation.set(-2.8 * k, 0, (i ? -1 : 1) * 0.9 * k); this.arms[i].el.rotation.x = -0.4; this.legs[i].hip.rotation.x = -1.3 * k + Math.sin(this.phase * 12 + i) * 0.3 * k; this.legs[i].kn.rotation.x = 0.6 * k; } return; }
     this.walkPhase = (this.walkPhase || 0) + dt * (T.boss ? 5 : 7 + speed * 2) * moving; const p = this.walkPhase; const sw = Math.sin(p);
     if (this.swingT > 0) this.swingT -= dt;
     const baseY = (T.boss ? 1.35 : 0.95) * s;
@@ -312,7 +337,7 @@ export class Zinzin {
 
 export class Enemies {
   constructor(game) { this.g = game; this.list = []; }
-  spawn(type, x, z, opts = {}) { const e = new Zinzin(this, type, x, z, opts); this.list.push(e); return e; }
+  spawn(type, x, z, opts = {}) { const e = new Zinzin(this, type, x, z, opts); this.list.push(e); this.g.folie?.onSpawn?.(e); return e; }
   separation(e) {
     const out = new THREE.Vector3();
     for (const o of this.list) { if (o === e || !o.alive) continue; const dx = e.pos.x - o.pos.x, dz = e.pos.z - o.pos.z; const d = Math.hypot(dx, dz); const min = e.radius + o.radius + 0.15; if (d < min && d > 1e-4) { const f = (min - d) / min; out.x += dx / d * f * 2.5; out.z += dz / d * f * 2.5; } }

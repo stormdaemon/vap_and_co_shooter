@@ -46,8 +46,9 @@
       <div><kbd>Z Q S D</kbd> / <kbd>W A S D</kbd> déplacer</div>
       <div><kbd>Maj</kbd> courir · <kbd>C</kbd> glissade / accroupi · <kbd>Espace</kbd> sauter</div>
       <div><kbd>Clic G</kbd> tirer · <kbd>Clic D</kbd> viser · <kbd>R</kbd> recharger</div>
-      <div><kbd>E</kbd> coup de poing · <kbd>F</kbd> ramasser / boutique · <kbd>1-7</kbd> / molette armes</div>
+      <div><kbd>E</kbd> coup de poing · <kbd>F</kbd> ramasser / boutique · <kbd>1-8</kbd> / molette armes</div>
       <div><kbd>G</kbd> Gummy-Bombe · <kbd>X</kbd> ultime · <kbd>L</kbd> lampe · double-tap : dash · <kbd>Échap</kbd> pause</div>
+      <div><kbd>P</kbd> (maintenir) pipi · <kbd>O</kbd> caca · <kbd>T</kbd> crier · <kbd>F</kbd> aux WC équipe pour se soulager</div>
     </div>
     <div class="intro-foot">Reconstitution 3D interprétée du magasin Vap&Co · Personnages fictifs · Aucun effet sanglant, uniquement de la vapeur.</div>
   </div>
@@ -65,6 +66,8 @@
     <div id="enemycard"><div class="eyebrow">ZINZINS</div><div class="big" id="enemiesLeft">0</div><div class="sub" id="killCount">0 hors combat</div></div>
   </div>
   <div id="modBadge" class="hidden"></div>
+  <div id="eventBadge" class="hidden"></div>
+  <div id="notifs"></div>
 
   <div id="announce"><div id="announceMain"></div><div id="announceSub"></div></div>
   <div id="powerups"></div>
@@ -77,6 +80,8 @@
     <div class="track slim"><div id="stamFill"></div></div>
     <div class="row" style="margin-top:8px"><span class="eyebrow" id="ultLabel">ULTIME 0%</span></div>
     <div class="track slim ult"><div id="ultFill"></div></div>
+    <div class="row" style="margin-top:8px"><span class="eyebrow" id="gaugeLbl">VESSIE 0% · TRANSIT 0% (P / O)</span></div>
+    <div class="gauges"><div class="track slim pee"><div id="bladderFill"></div></div><div class="track slim poo"><div id="transitFill"></div></div></div>
   </div>
 
   <div id="weaponcard" class="card">
@@ -110,6 +115,7 @@
     </div>
     <div class="ov-settings">
       <label><input type="checkbox" id="chkMusic" checked> Musique</label>
+      <label><input type="checkbox" id="chkVoice" checked> Voix de l'annonceur</label>
       <label><input type="checkbox" id="chkShake" checked> Secousses caméra</label>
       <label><input type="checkbox" id="chkFps"> Afficher les FPS</label>
       <label>Sensibilité <input type="range" id="rngSens" min="0.3" max="3" step="0.1" value="1"></label>

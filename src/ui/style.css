@@ -158,3 +158,15 @@ kbd{font:600 10px var(--font);letter-spacing:.06em;padding:3px 6px;border:1px so
 .si-cost{margin-top:8px;font-size:12px;font-weight:700;color:var(--lime)}
 .muted{color:#7d857a}
 #shop{z-index:22}
+
+/* ---------- folie ---------- */
+#eventBadge{position:absolute;top:150px;left:50%;transform:translateX(-50%);padding:7px 16px;border:2px solid;border-radius:20px;font-size:12px;font-weight:900;letter-spacing:.2em;background:#000c;text-shadow:0 0 12px currentColor;animation:evpulse .8s infinite alternate}
+@keyframes evpulse{to{transform:translateX(-50%) scale(1.06)}}
+.gauges{display:flex;gap:6px;margin-top:6px}.gauges .track{flex:1;margin:0}
+.track.pee #bladderFill{height:100%;width:0;background:linear-gradient(90deg,#f2e24a,#fff6a0);transition:width .2s}
+.track.poo #transitFill{height:100%;width:0;background:linear-gradient(90deg,#6b4423,#a8763e);transition:width .2s}
+#notifs{position:absolute;left:26px;top:60px;display:flex;flex-direction:column;gap:8px;width:min(360px,40vw);pointer-events:none}
+.notif{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:24px;background:#0b0f0ce6;border:1px solid var(--line);font-size:12px;line-height:1.45;color:#e6ecd9;transform:translateX(-30px);opacity:0;transition:transform .35s cubic-bezier(.2,1.4,.3,1),opacity .35s;box-shadow:0 8px 24px #0006}
+.notif.on{transform:none;opacity:1}
+.ndot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pink);margin-top:5px;box-shadow:0 0 10px var(--pink)}
+@media(max-width:900px){#notifs{top:180px;width:60vw}}

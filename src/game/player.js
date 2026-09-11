@@ -19,7 +19,7 @@ export class Player {
     this.fovBase = 82; this.fovKick = 0; this.ads = 0; this.adsTarget = 0;
     this.moving = 0; this.running = false; this.footstep = 0; this.onFootstep = null;
     this.acc = 0; this.step = 1 / 120; this.time = 0;
-    this.lastGroundY = 0; this.noclip = false;
+    this.lastGroundY = 0; this.noclip = false; this.gravity = 16; this.jumpV = 5.6; this.extraRoll = 0; this.locked = false; this.regenRate = 3;
   }
   reset(x = 5.9, z = 10.5, yaw = 0) { this.pos.set(x, 0, z); this.prev.copy(this.pos); this.vel.set(0, 0, 0); this.yaw = yaw; this.pitch = 0; this.hp = this.maxHp; this.dead = false; this.sliding = 0; this.dashCd = 0; this.crouch = false; this.eye = this.eyeTarget = STAND; }
 
@@ -116,8 +116,8 @@ export class Player {
       this.vel.x += (want.x - this.vel.x) * k; this.vel.z += (want.z - this.vel.z) * k;
     }
     // gravity + jump
-    const g = 16;
-    if (this.onGround && inp.wasPressed('Space') && !this.dead) { this.vel.y = 5.6; this.onGround = false; this.onJump?.(); }
+    const g = this.gravity;
+    if (this.onGround && inp.wasPressed('Space') && !this.dead) { this.vel.y = this.jumpV; this.onGround = false; this.onJump?.(); }
     if (inp.pressed.has('Space')) inp.pressed.delete('Space');
     if (!this.onGround) { this.vel.y -= g * h; this.airTime += h; } else this.airTime = 0;
     // integrate
@@ -147,7 +147,8 @@ export class Player {
     this.fovKick *= Math.exp(-h * 8);
     this.hpRegen(h);
   }
-  hpRegen(h) { if (!this.dead && this.time - this.lastHurt > 6 && this.hp < this.maxHp) this.hp = Math.min(this.maxHp, this.hp + 6 * h); }
+  // casual: always regenerating, faster after a few seconds without damage
+  hpRegen(h) { if (this.dead || this.hp >= this.maxHp) return; const calm = this.time - this.lastHurt; const rate = this.regenRate * (calm > 4 ? 3 : 1); this.hp = Math.min(this.maxHp, this.hp + rate * h); }
   damage(amount, from) {
     if (this.dead) return; this.hp -= amount; this.lastHurt = this.time; this.shake = Math.max(this.shake, Math.min(1, amount / 30));
     this.kickVel.x += (Math.random() - 0.5) * 6; this.kickVel.y += 3;
@@ -164,7 +165,7 @@ export class Player {
     this.shakeVec.set((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh, 0);
     const rt = this.right();
     this.camera.position.set(p.x + rt.x * bobX + this.shakeVec.x, p.y + this.eye + bobY - this.landDip + this.shakeVec.y, p.z + rt.z * bobX);
-    this.camera.rotation.set(this.pitch + this.kick.y * 0.01 - this.landDip * 0.4, this.yaw + this.kick.x * 0.01, Math.sin(this.bobPhase * 0.5) * 0.006 * this.bobAmt + slideRoll + this.shakeVec.x * 2, 'YXZ');
+    this.camera.rotation.set(this.pitch + this.kick.y * 0.01 - this.landDip * 0.4, this.yaw + this.kick.x * 0.01, Math.sin(this.bobPhase * 0.5) * 0.006 * this.bobAmt + slideRoll + this.shakeVec.x * 2 + (this.extraRoll || 0), 'YXZ');
     const fov = this.fovBase * (1 - this.ads * 0.3) + this.fovKick + (this.sliding > 0 || this.dashTime > 0 ? 6 : 0) + (this.running && this.moving > 4 ? 4 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.05) { this.camera.fov += (fov - this.camera.fov) * (1 - Math.exp(-dt * 10)); this.camera.updateProjectionMatrix(); }
   }

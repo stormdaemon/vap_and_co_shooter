@@ -28,7 +28,7 @@ export class Waves {
     const list = [];
     const isBoss = n % 5 === 0;
     let count = Math.min(46, Math.round((6 + n * 2.6) * (0.75 + this.g.difficulty * 0.25)) * (mod?.countMul || 1));
-    const pool = [['client', 10]]; if (n >= 2) pool.push(['sprinter', 5 + n]); if (n >= 3) pool.push(['vapoteur', 4 + n * 0.8]); if (n >= 4) pool.push(['mamie', 2 + n * 0.5], ['livreur', 2 + n * 0.4]); if (n >= 5) pool.push(['vigile', 2 + n * 0.6], ['kamikaze', 1.5 + n * 0.4]); if (n >= 6) pool.push(['influenceur', 1.5 + n * 0.2]);
+    const pool = [['client', 10]]; if (n >= 2) pool.push(['sprinter', 5 + n]); if (n >= 3) pool.push(['vapoteur', 4 + n * 0.8]); if (n >= 4) pool.push(['mamie', 2 + n * 0.5], ['livreur', 2 + n * 0.4]); if (n >= 5) pool.push(['vigile', 2 + n * 0.6], ['kamikaze', 1.5 + n * 0.4]); if (n >= 6) pool.push(['influenceur', 1.5 + n * 0.2]); if (n >= 3) pool.push(['touriste', 1.5 + n * 0.4]); if (n >= 5) pool.push(['mime', 1.5 + n * 0.4]);
     if (mod?.key === 'kamikazes') pool.push(['kamikaze', 25]);
     const tot = pool.reduce((s, p) => s + p[1], 0);
     for (let i = 0; i < count; i++) { let r = Math.random() * tot; let t = 'client'; for (const [k, w] of pool) { r -= w; if (r <= 0) { t = k; break; } } list.push(t); }
@@ -95,6 +95,7 @@ export class Waves {
     if (this.wave === 2) { g.weapons.drop('gummy', new THREE.Vector3(-4.96, 0, -0.74)); g.weapons.drop('grenade', new THREE.Vector3(2.75, 0, -4.9), 1, 'GUMMY-BOMBES'); g.ui.toast('Nouvelles caches : Mitrailleuse à Gummies (table haute) et Gummy-Bombes (vitrines).', 6); }
     if (this.wave === 3) { g.weapons.drop('flamant', new THREE.Vector3(-1.28, 0, -11.04)); g.ui.toast('Nouvelle cache : Lance-Flamant derrière le comptoir.', 5); }
     if (this.wave === 4) { g.weapons.drop('laser', new THREE.Vector3(-6.0, 0, 8.6)); g.ui.toast('Nouvelle cache : Rayon Botanique près de la table à chicha.', 5); }
+    if (this.wave === 6) { g.weapons.drop('seche', new THREE.Vector3(7.3, 0, -1.4)); g.ui.toast('Nouvelle cache : Sèche-Cheveux 9000 près des WC équipe. Oui.', 6); }
     if (this.wave === 5) { g.weapons.drop('bulles', new THREE.Vector3(-5.2, 3.5, -11.3)); g.ui.toast('Nouvelle cache : Canon à Bulles sur la mezzanine.', 5); }
     if (this.wave >= 6 && this.wave % 2 === 0) g.weapons.drop('grenade', p.clone().add(new THREE.Vector3(-1, 0, 0)), 1, 'GUMMY-BOMBES');
     this.nextWave(this.wave % 5 === 0 ? 14 : 11);
