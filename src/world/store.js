@@ -118,11 +118,13 @@ export class World {
     if (x <= -4.4 && x > -8.5 && z <= -10.15 && z > -12.6) return 3.47; // mezzanine
     return 0;
   }
-  isBlocked(x, z, r = 0.3, y = 0) {
+  isBlocked(x, z, r = 0.3, y = null) {
     const B = this.bounds;
     if (x - r < B.x0 || x + r > B.x1 || z - r < B.z0 || z + r > B.z1) return true;
+    if (y === null) y = this.floorHeight(x, z);
     for (const c of this.colliders) {
       if (c.top <= y + 0.05) continue;
+      if (c.kind === 'under' && y > 3) continue;
       if (c.bottom !== undefined && c.bottom > y + 1.5) continue;
       if (x + r > c.x0 && x - r < c.x1 && z + r > c.z0 && z - r < c.z1) return true;
     }
@@ -505,7 +507,6 @@ export class World {
     this.collider(-5.6, -4.8, -12.1, -11.5, 4.0);          // boxes
     // ground-level: under the mezzanine is blocked by a wall/stock (block it for simplicity)
     this.colliders.push({ x0: -8.3, x1: -4.5, z0: -12.6, z1: -10.2, top: 3.3, bottom: 0, kind: 'under' });
-    this.colliders.push({ x0: -8.3, x1: -6.1, z0: -10.2, z1: -5.2, top: 3.3, bottom: 0, kind: 'under' });
     this.occluder(-8.3, 0, -12.6, -4.5, 3.5, -10.2);
     B.box(M.woodH, 3.8, 3.3, 2.4, -6.45, 1.65, -11.4, { tex: 1.2 });
   }

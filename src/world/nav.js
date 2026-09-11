@@ -9,7 +9,7 @@ export class NavGrid {
   rebuild() {
     for (let j = 0; j < this.h; j++) for (let i = 0; i < this.w; i++) {
       const x = this.x0 + (i + 0.5) * this.step, z = this.z0 + (j + 0.5) * this.step;
-      this.free[j * this.w + i] = this.world.isBlocked(x, z, 0.3) ? 0 : 1;
+      this.free[j * this.w + i] = this.world.isBlocked(x, z, 0.3, this.world.floorHeight(x, z)) ? 0 : 1;
     }
   }
   cell(x, z) { return [Math.floor((x - this.x0) / this.step), Math.floor((z - this.z0) / this.step)]; }
@@ -67,7 +67,8 @@ export class NavGrid {
   }
   clearWalk(ax, az, bx, bz) {
     const d = Math.hypot(bx - ax, bz - az); const n = Math.max(1, Math.ceil(d / 0.2));
-    for (let i = 1; i <= n; i++) { const t = i / n; if (this.world.isBlocked(ax + (bx - ax) * t, az + (bz - az) * t, 0.3)) return false; }
+    let py = this.world.floorHeight(ax, az);
+    for (let i = 1; i <= n; i++) { const t = i / n; const x = ax + (bx - ax) * t, z = az + (bz - az) * t; const y = this.world.floorHeight(x, z); if (Math.abs(y - py) > 0.5) return false; py = y; if (this.world.isBlocked(x, z, 0.3, y)) return false; }
     return true;
   }
   randomFree(rng = Math.random) {
